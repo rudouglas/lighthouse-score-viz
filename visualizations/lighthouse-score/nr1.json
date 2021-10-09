@@ -1,0 +1,46 @@
+{
+    "schemaType": "VISUALIZATION",
+    "id": "lighthouse-score",
+    "displayName": "LighthouseScore",
+    "description": "",
+    "configuration": [
+        {
+            "name": "nrqlQueries",
+            "title": "NRQL Queries",
+            "type": "collection",
+            "items": [
+                {
+                    "name": "accountId",
+                    "title": "Account ID",
+                    "description": "Account ID to be associated with the query",
+                    "type": "account-id"
+                },
+                {
+                    "name": "query",
+                    "title": "Query",
+                    "description": "NRQL query for visualization",
+                    "type": "nrql"
+                }
+            ]
+        },
+        {
+            "name": "thresholds",
+            "title": "Thresholds",
+            "type": "namespace",
+            "items": [
+                {
+                    "name": "criticalThreshold",
+                    "title": "Critical threshold",
+                    "description": "Value at which progress is displayed as critical",
+                    "type": "number"
+                },
+                {
+                    "name": "highValuesAreSuccess",
+                    "title": "Above threshold is success",
+                    "description": "If toggled on, values above the threshold display as successful. Otherwise, values at or above the threshold display as critical.",
+                    "type": "boolean"
+                }
+            ]
+        }
+    ]
+}
