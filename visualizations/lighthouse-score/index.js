@@ -19,6 +19,7 @@ import {
   LayoutItem,
   BlockText,
   Link,
+  Banner,
 } from "nr1";
 import NrqlQueryError from "../../src/nrql-query-error";
 import NoDataState from "../../src/no-data-state";
@@ -223,6 +224,7 @@ export default class CircularProgressBar extends React.Component {
         {({ width, height }) => (
           <PlatformStateContext.Consumer>
             {({ timeRange }) => (
+              
               <NrqlQuery
                 query={nrqlQueries[0].query}
                 accountId={parseInt(nrqlQueries[0].accountId)}
@@ -276,12 +278,12 @@ export default class CircularProgressBar extends React.Component {
                       >
                         <VictoryPie
                           standalone={false}
-                          animate={{ duration: 1000 }}
+                          animate={{ duration: 5000 }}
                           data={series}
                           width={CHART_WIDTH}
                           height={CHART_HEIGHT}
                           padding={10}
-                          innerRadius={135}
+                          innerRadius={50}
                           cornerRadius={25}
                           labels={() => null}
                           style={{ data: { fill: ({ datum }) => datum.color } }}
