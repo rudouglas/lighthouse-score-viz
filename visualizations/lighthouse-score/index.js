@@ -19,22 +19,20 @@ import {
   LayoutItem,
   BlockText,
   Link,
-  Banner,
+  Badge,
 } from "nr1";
 import NrqlQueryError from "../../src/nrql-query-error";
 import NoDataState from "../../src/no-data-state";
 import { baseLabelStyles } from "../../src/theme";
 import { ATTRIBUTES, mainThresholds } from "../../utils/attributes";
-import {
-  arithmeticMean,
-} from "../../utils/helpers";
+import { arithmeticMean } from "../../utils/helpers";
 import { QUANTILE_AT_VALUE } from "../../utils/math.js";
 const BOUNDS = {
-  X: 400,
-  Y: 400,
+  X: 300,
+  Y: 300,
 };
 
-const LABEL_SIZE = 24;
+const LABEL_SIZE = 20;
 const LABEL_PADDING = 10;
 const CHART_WIDTH = BOUNDS.X;
 const CHART_HEIGHT = BOUNDS.Y - LABEL_SIZE - LABEL_PADDING;
@@ -78,7 +76,8 @@ export default class CircularProgressBar extends React.Component {
 
   formatData = (data) => {
     return Object.keys(ATTRIBUTES).map((att) => {
-      const { name, explanation, weight, scores, metrics, link } = ATTRIBUTES[att];
+      const { name, explanation, weight, scores, metrics, link } =
+        ATTRIBUTES[att];
       const filtered = data.filter((point) => point.data[0][att]);
       const result = filtered[0].data[0][att];
       const score = this.calculateScore(metrics, result);
@@ -100,7 +99,7 @@ export default class CircularProgressBar extends React.Component {
   };
   calculateTotalScore = (data) => {
     const percent = arithmeticMean(data);
-    console.log(percent)
+    console.log(percent);
     const color = this.getMainColor(percent);
     return {
       percent,
@@ -110,7 +109,7 @@ export default class CircularProgressBar extends React.Component {
         { x: "remainder", y: 100 - percent, color: "transparent" },
       ],
     };
-  }
+  };
 
   nrqlInputIsValid = (data) => {
     const allowedAttributes = data
@@ -125,11 +124,11 @@ export default class CircularProgressBar extends React.Component {
 
   getMainColor = (value) => {
     if (value >= mainThresholds.good) {
-      return "green"
+      return "green";
     } else if (value >= mainThresholds.moderate) {
-      return "orange"
+      return "orange";
     } else {
-      return "red"
+      return "red";
     }
   };
 
@@ -224,7 +223,6 @@ export default class CircularProgressBar extends React.Component {
         {({ width, height }) => (
           <PlatformStateContext.Consumer>
             {({ timeRange }) => (
-              
               <NrqlQuery
                 query={nrqlQueries[0].query}
                 accountId={parseInt(nrqlQueries[0].accountId)}
@@ -265,60 +263,98 @@ export default class CircularProgressBar extends React.Component {
 
                   const filteredAttributes = this.formatData(data);
                   this.checkWeights(filteredAttributes);
-                  console.log(filteredAttributes)
-                  const { percent, label, series } = this.calculateTotalScore(filteredAttributes)
-
+                  console.log(filteredAttributes);
+                  const { percent, label, series } =
+                    this.calculateTotalScore(filteredAttributes);
+                  console.log(height);
                   return (
                     <>
-                      <svg
-                        viewBox={`0 0 ${BOUNDS.X} ${BOUNDS.Y}`}
-                        width={width}
-                        height={height}
-                        className="CircularProgressBar"
-                      >
-                        <VictoryPie
-                          standalone={false}
-                          animate={{ duration: 5000 }}
-                          data={series}
-                          width={CHART_WIDTH}
-                          height={CHART_HEIGHT}
-                          padding={10}
-                          innerRadius={50}
-                          cornerRadius={25}
-                          labels={() => null}
-                          style={{ data: { fill: ({ datum }) => datum.color } }}
-                        />
-                        <VictoryAnimation duration={1000} data={percent}>
-                          {(percent) => (
-                            <VictoryLabel
-                              textAnchor="middle"
-                              verticalAnchor="middle"
-                              x={CHART_WIDTH / 2}
-                              y={CHART_HEIGHT / 2}
-                              text={`${Math.round(percent)}%`}
-                              style={{ ...baseLabelStyles, fontSize: 45 }}
+                      {" "}
+                      <Grid>
+                        <GridItem columnSpan={3}>
+                          <svg
+                            viewBox={`${BOUNDS.X} ${BOUNDS.Y}`}
+                            width={"100%"}
+                            height={400}
+                            className="CircularProgressBar"
+                          >
+                            <VictoryPie
+                              standalone={false}
+                              animate={{ duration: 5000 }}
+                              data={series}
+                              width={CHART_WIDTH}
+                              height={CHART_HEIGHT}
+                              padding={10}
+                              innerRadius={90}
+                              cornerRadius={25}
+                              labels={() => null}
+                              style={{
+                                data: { fill: ({ datum }) => datum.color },
+                              }}
                             />
-                          )}
-                        </VictoryAnimation>
-                        <VictoryLabel
-                          text={label}
-                          lineHeight={1}
-                          x={CHART_WIDTH / 2}
-                          y={BOUNDS.Y - LABEL_SIZE}
-                          textAnchor="middle"
-                          style={{ ...baseLabelStyles, fontSize: LABEL_SIZE }}
-                        />
-                      </svg>
-                      <Layout>
-                        <LayoutItem
-                          type={LayoutItem.TYPE.SPLIT_LEFT}
-                          sizeType={LayoutItem.SIZE_TYPE.LARGE}
-                        />
-                        <LayoutItem>
+                            <VictoryAnimation duration={5000} data={percent}>
+                              {(percent) => (
+                                <VictoryLabel
+                                  textAnchor="middle"
+                                  verticalAnchor="middle"
+                                  x={CHART_WIDTH / 2}
+                                  y={CHART_HEIGHT / 2}
+                                  text={`${Math.round(percent)}%`}
+                                  style={{ ...baseLabelStyles, fontSize: 45 }}
+                                />
+                              )}
+                            </VictoryAnimation>
+                            <VictoryLabel
+                              text={label}
+                              lineHeight={1}
+                              x={CHART_WIDTH / 2}
+                              y={BOUNDS.Y - LABEL_SIZE}
+                              textAnchor="middle"
+                              style={{
+                                ...baseLabelStyles,
+                                fontSize: LABEL_SIZE,
+                              }}
+                            />
+                          </svg>
                           <Grid>
+                            <GridItem
+                              columnSpan={2}
+                              collapseGapBefore
+                              collapseGapAfter
+                            />
+                            <GridItem
+                              columnSpan={2}
+                              collapseGapBefore
+                              collapseGapAfter
+                            >
+                              <Badge type={Badge.TYPE.CRITICAL}>{`0-${mainThresholds.moderate - 1}`}</Badge>
+                            </GridItem>
+                            <GridItem
+                              columnSpan={2}
+                              collapseGapBefore
+                              collapseGapAfter
+                            >
+                              <Badge type={Badge.TYPE.WARNING}>{`${mainThresholds.moderate}-${mainThresholds.good - 1}`}</Badge>
+                            </GridItem>
+                            <GridItem
+                              columnSpan={2}
+                              collapseGapBefore
+                              collapseGapAfter
+                            >
+                              <Badge type={Badge.TYPE.SUCCESS}>{`${mainThresholds.good}-100`}</Badge>
+                            </GridItem>
+                            <GridItem
+                              columnSpan={2}
+                              collapseGapBefore
+                              collapseGapAfter
+                            />
+                          </Grid>
+                        </GridItem>{" "}
+                        <GridItem columnSpan={9}>
+                          <Grid preview>
                             {filteredAttributes.map((att) => {
                               return (
-                                <GridItem columnSpan={6}>
+                                <GridItem columnSpan={4}>
                                   <Card>
                                     <CardHeader>
                                       <Stack
@@ -422,10 +458,14 @@ export default class CircularProgressBar extends React.Component {
                                           gapType={Grid.GAP_TYPE.SMALL}
                                         >
                                           <GridItem columnSpan={12}>
-                                            <BlockText>{att.metadata.explanation}</BlockText>
+                                            <BlockText>
+                                              {att.metadata.explanation}
+                                            </BlockText>
                                           </GridItem>
                                           <GridItem columnSpan={12}>
-                                            <Link to={att.metadata.link}>Read more</Link>
+                                            <Link to={att.metadata.link}>
+                                              Read more
+                                            </Link>
                                           </GridItem>
                                         </Grid>
                                       </CardSection>
@@ -435,12 +475,8 @@ export default class CircularProgressBar extends React.Component {
                               );
                             })}
                           </Grid>
-                        </LayoutItem>
-                        <LayoutItem
-                          type={LayoutItem.TYPE.SPLIT_RIGHT}
-                          sizeType={LayoutItem.SIZE_TYPE.LARGE}
-                        />
-                      </Layout>
+                        </GridItem>
+                      </Grid>
                     </>
                   );
                 }}
