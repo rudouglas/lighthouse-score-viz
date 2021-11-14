@@ -1,21 +1,22 @@
 import React from "react";
 import PropTypes from "prop-types";
 import {
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-} from "recharts";
-import {
   Card,
   CardBody,
   HeadingText,
   NrqlQuery,
   Spinner,
   AutoSizer,
+  Link,
+  Table,
+  TableHeaderCell,
+  TableRow,
+  TableHeader,
+  TableRowCell,
 } from "nr1";
-
+import Accordion from "../../src/components/Accordion";
+import { mainThresholds } from "../../utils/attributes";
+import { checkMeasurement, parseUrl } from "../../utils/helpers";
 export default class LighthousePerformanceVisualization extends React.Component {
   // Custom props you wish to be configurable in the UI must also be defined in
   // the nr1.json file for the visualization. See docs for more details.
@@ -47,19 +48,70 @@ export default class LighthousePerformanceVisualization extends React.Component 
    * Restructure the data for a non-time-series, facet-based NRQL query into a
    * form accepted by the Recharts library's RadarChart.
    * (https://recharts.org/api/RadarChart).
+   * [{'key':'url','valueType':'url','label':'URL'},{'valueType':'bytes','key':'totalBytes','label':'Transfer Size'},{'key':'wastedMs','label':'Potential Savings','valueType':'timespanMs'}
    */
-  transformData = async (rawData) => {
+  createOpportunityTable = (details) => {
+    const { headings, items } = details;
+    const tableKeys = headings.map((heading) => {
+      return heading.key;
+    });
+    return (
+      <Table items={items} multivalue>
+        <TableHeader>
+          {headings.map((heading) => (
+            <TableHeaderCell
+              value={({ item }) => item[heading.key]}
+              width={heading.key === 'node' ? "5%" : heading.key === 'url' ? "60%" : "20%"}
+            >
+              {heading.label}
+            </TableHeaderCell>
+          ))}
+        </TableHeader>
+
+        {({ item }) => (
+          <TableRow>
+            {tableKeys.map((key) => {
+              if (key === "url" && item[key].startsWith("http")) {
+                const { value, additionalValue } = parseUrl(item[key]);
+                  return (
+                    <TableRowCell
+                      additionalValue={`${additionalValue}`}
+                    ><Link to={item['url']}>{value}</Link></TableRowCell>
+                  );
+              } else if (key === 'node') {
+                console.log(item['url'])
+                return <TableRowCell><img src={item['url']} style={{ width: '24px', height: '24px'}}/></TableRowCell>;
+              }
+              const {valueType} = headings.filter((heading) => heading.key === key)[0];
+              const measurement = checkMeasurement(valueType, item[key]);
+              console.log({valueType})
+              return <TableRowCell>{`${measurement}`}</TableRowCell>;
+            
+            })}
+          </TableRow>
+        )}
+      </Table>
+    );
+  };
+  transformData = (rawData) => {
+    // console.log({ rawData });
     const auditRefs = Object.keys(rawData)
       .filter((key) => key.includes("auditRefs_"))
       .reduce((res, key) => ((res[key] = rawData[key]), res), {});
+    // console.log({ auditRefs });
     const auditRefString = Object.keys(auditRefs).map(
       (key, index) => auditRefs[`auditRefs_${index}`]
     );
+    // console.log({ auditRefString });
     const auditRefObject = JSON.parse(auditRefString.join(""));
-    const opportunities = auditRefObject.filter(
+    const allOpportunities = auditRefObject.filter(
       (audit) => audit.details && audit.details.type == "opportunity"
     );
-    console.log(opportunities);
+    const opportunities = allOpportunities.filter(opp => opp.score > 0 && opp.score < (mainThresholds.good / 100) );
+    // console.log({ opportunities });
+    const passed = allOpportunities.filter(opp => opp.score >= (mainThresholds.good / 100) );
+    const skipped = allOpportunities.filter(opp => !opp.score);
+    return { auditRefObject, opportunities, passed, skipped };
   };
 
   /**
@@ -113,9 +165,25 @@ export default class LighthousePerformanceVisualization extends React.Component 
               // fs.writeFileSync('thing.json', String(resultData))
               const metadata = data[0].metadata;
               // console.log(JSON.stringify(metadata))
-              const transformedData = this.transformData(resultData);
-
-              return;
+              const { auditRefObject, opportunities, passed, skipped } =
+                this.transformData(resultData);
+              // console.log({ auditRefObject, opportunities });
+              return skipped.map((opportunity) => {
+                return (
+                  <Accordion
+                    {...opportunity}
+                  >
+                    {Object.entries(opportunity).map((opp) => (
+                      <p>{JSON.stringify(opp)}</p>
+                    ))}
+                    {
+                      <div>
+                        {this.createOpportunityTable(opportunity.details)}
+                      </div>
+                    }
+                  </Accordion>
+                );
+              });
             }}
           </NrqlQuery>
         )}
