@@ -14,7 +14,10 @@ import {
   TableHeader,
   TableRowCell,
 } from "nr1";
-import Accordion from "../../src/components/Accordion";
+import Opportunities from "../../src/components/Opportunities";
+import Skipped from "../../src/components/Skipped";
+import Passed from "../../src/components/Passed";
+import Diagnostics from "../../src/components/Diagnostics";
 import { mainThresholds } from "../../utils/attributes";
 import { checkMeasurement, parseUrl } from "../../utils/helpers";
 export default class LighthousePerformanceVisualization extends React.Component {
@@ -50,49 +53,7 @@ export default class LighthousePerformanceVisualization extends React.Component 
    * (https://recharts.org/api/RadarChart).
    * [{'key':'url','valueType':'url','label':'URL'},{'valueType':'bytes','key':'totalBytes','label':'Transfer Size'},{'key':'wastedMs','label':'Potential Savings','valueType':'timespanMs'}
    */
-  createOpportunityTable = (details) => {
-    const { headings, items } = details;
-    const tableKeys = headings.map((heading) => {
-      return heading.key;
-    });
-    return (
-      <Table items={items} multivalue>
-        <TableHeader>
-          {headings.map((heading) => (
-            <TableHeaderCell
-              value={({ item }) => item[heading.key]}
-              width={heading.key === 'node' ? "5%" : heading.key === 'url' ? "60%" : "20%"}
-            >
-              {heading.label}
-            </TableHeaderCell>
-          ))}
-        </TableHeader>
 
-        {({ item }) => (
-          <TableRow>
-            {tableKeys.map((key) => {
-              if (key === "url" && item[key].startsWith("http")) {
-                const { value, additionalValue } = parseUrl(item[key]);
-                  return (
-                    <TableRowCell
-                      additionalValue={`${additionalValue}`}
-                    ><Link to={item['url']}>{value}</Link></TableRowCell>
-                  );
-              } else if (key === 'node') {
-                console.log(item['url'])
-                return <TableRowCell><img src={item['url']} style={{ width: '24px', height: '24px'}}/></TableRowCell>;
-              }
-              const {valueType} = headings.filter((heading) => heading.key === key)[0];
-              const measurement = checkMeasurement(valueType, item[key]);
-              console.log({valueType})
-              return <TableRowCell>{`${measurement}`}</TableRowCell>;
-            
-            })}
-          </TableRow>
-        )}
-      </Table>
-    );
-  };
   transformData = (rawData) => {
     // console.log({ rawData });
     const auditRefs = Object.keys(rawData)
@@ -102,16 +63,31 @@ export default class LighthousePerformanceVisualization extends React.Component 
     const auditRefString = Object.keys(auditRefs).map(
       (key, index) => auditRefs[`auditRefs_${index}`]
     );
-    // console.log({ auditRefString });
+
     const auditRefObject = JSON.parse(auditRefString.join(""));
     const allOpportunities = auditRefObject.filter(
       (audit) => audit.details && audit.details.type == "opportunity"
     );
-    const opportunities = allOpportunities.filter(opp => opp.score > 0 && opp.score < (mainThresholds.good / 100) );
-    // console.log({ opportunities });
-    const passed = allOpportunities.filter(opp => opp.score >= (mainThresholds.good / 100) );
-    const skipped = allOpportunities.filter(opp => !opp.score);
-    return { auditRefObject, opportunities, passed, skipped };
+    const opportunities = allOpportunities.filter(
+      (opp) => opp.score > 0 && opp.score < mainThresholds.good / 100
+    );
+
+    const diagnostics = auditRefObject.filter(
+      (audit) =>
+        !audit.score ||
+        (audit.details &&
+        audit.details.type !== "opportunity" &&
+        audit.score < mainThresholds.good / 100)
+    );
+    const passed = auditRefObject.filter(
+      (audit) => audit.score && audit.score >= mainThresholds.good / 100
+    );
+    const everythingElse = auditRefObject.filter(
+      (audit) => !audit.details || audit.details.type !== "opportunity"
+    );
+    console.log({ diagnostics });
+    const skipped = allOpportunities.filter((opp) => !opp.score);
+    return { diagnostics, auditRefObject, opportunities, passed, skipped };
   };
 
   /**
@@ -165,25 +141,21 @@ export default class LighthousePerformanceVisualization extends React.Component 
               // fs.writeFileSync('thing.json', String(resultData))
               const metadata = data[0].metadata;
               // console.log(JSON.stringify(metadata))
-              const { auditRefObject, opportunities, passed, skipped } =
-                this.transformData(resultData);
+              const {
+                diagnostics,
+                auditRefObject,
+                opportunities,
+                passed,
+                skipped,
+              } = this.transformData(resultData);
               // console.log({ auditRefObject, opportunities });
-              return skipped.map((opportunity) => {
-                return (
-                  <Accordion
-                    {...opportunity}
-                  >
-                    {Object.entries(opportunity).map((opp) => (
-                      <p>{JSON.stringify(opp)}</p>
-                    ))}
-                    {
-                      <div>
-                        {this.createOpportunityTable(opportunity.details)}
-                      </div>
-                    }
-                  </Accordion>
-                );
-              });
+              return (
+                <>
+                  <Opportunities opportunities={opportunities} />
+                  <Diagnostics diagnostics={diagnostics} />
+                  <Passed passed={passed} />
+                </>
+              );
             }}
           </NrqlQuery>
         )}

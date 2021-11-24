@@ -8,9 +8,11 @@ import {
   NrqlQuery,
   Spinner,
   AutoSizer,
+  Tile,
 } from "nr1";
-import { getSymbol, checkMeasurement } from "../../utils/helpers";
-
+import { getSymbol, checkMeasurement, getMainColor } from "../../utils/helpers";
+import DisplayValue from "./DisplayValue";
+import ReactMarkdown from 'react-markdown'
 import "./accordion.css";
 
 export default class Accordion extends React.Component {
@@ -24,7 +26,8 @@ export default class Accordion extends React.Component {
     this.toggleAccordion = this.toggleAccordion.bind(this);
   }
 
-  toggleAccordion = () => {
+  toggleAccordion = (e) => {
+    console.log(e.target.className)
     if (this.state.accordionIsOpen) {
       this.setState({ accordionIsOpen: false, display: "none" });
     } else {
@@ -32,25 +35,29 @@ export default class Accordion extends React.Component {
     }
   };
   render() {
-    const { score, title, description, children, numericValue, numericUnit } =
+    const { score, title, description, children, numericValue, numericUnit, displayValue } =
       this.props;
+    const color = score !== null ? getMainColor(score * 100) : 'grey';
+    const formatTitle = title.replace('`width`', `<span style={{color: '#0099ff'}}>width</span>`)
     return (
       <div className="accordion__section">
-        <div className="accordion__header" onClick={this.toggleAccordion}>
-          <Grid>
-            <GridItem columnSpan={6}>
-              <p className="accordion__title">
-                {getSymbol(score)}
-                {title}
-              </p>
-            </GridItem>
-            <GridItem columnSpan={4}>
-              <p className="accordion__title">{title}</p>
-            </GridItem>
-            <GridItem columnSpan={1}>
-              <p className="accordion__title">{checkMeasurement(numericUnit, numericValue)}</p>
-            </GridItem>
-          </Grid>
+        <div className="accordion__header" onClick={(e) => this.toggleAccordion(e)}>
+          <Tile onClick={console.log}>
+            <Grid>
+              <GridItem columnSpan={10}>
+                <HeadingText>
+                  {getSymbol(score)}{' '}
+                  {title}{' '}
+                  <DisplayValue color={color} displayValue={displayValue} />
+                </HeadingText>
+              </GridItem>
+              <GridItem columnSpan={2}>
+                <HeadingText>
+                  {checkMeasurement(numericUnit, numericValue)}
+                </HeadingText>
+              </GridItem>
+            </Grid>
+          </Tile>
         </div>
         <div
           className="accordion__content"
@@ -62,7 +69,7 @@ export default class Accordion extends React.Component {
                 spacingType={[HeadingText.SPACING_TYPE.LARGE]}
                 type={HeadingText.TYPE.HEADING_3}
               >
-                {description}
+                <ReactMarkdown children={description} />
               </HeadingText>
               {children}
             </CardBody>

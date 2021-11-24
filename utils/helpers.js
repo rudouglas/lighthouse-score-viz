@@ -1,4 +1,4 @@
-import { Icon } from 'nr1'
+import { Icon } from "nr1";
 import { ATTRIBUTES, mainThresholds } from "./attributes";
 
 export const NBSP = "\xa0";
@@ -38,47 +38,60 @@ export function calculateRating(score) {
 }
 
 export const getMainColor = (value) => {
-  if (value >= mainThresholds.good) {
+  if (value != null && value < mainThresholds.moderate) {
+    return "red";
+  } else if (value >= mainThresholds.good) {
     return "green";
   } else if (value >= mainThresholds.moderate) {
     return "orange";
   } else {
-    return "red";
+    return "grey";
   }
 };
 
 export const getSymbol = (score) => {
-  if (!score) {
+  if (score == null) {
     console.log("getSymbol", "score is null");
-    return (
-      <Icon type={Icon.TYPE.INTERFACE__SIGN__MINUS__V_ALTERNATE} />
-    )
+    return <Icon type={Icon.TYPE.INTERFACE__SIGN__MINUS__V_ALTERNATE} />;
   }
   const color = getMainColor(score * 100);
   if (color === "orange") {
     return (
-      <Icon type={Icon.TYPE.INTERFACE__STATE__WARNING__WEIGHT_BOLD} color="orange" />
+      <Icon
+        type={Icon.TYPE.INTERFACE__STATE__WARNING__WEIGHT_BOLD}
+        color="orange"
+      />
     );
   } else if (color === "red") {
     return (
-      <Icon type={Icon.TYPE.INTERFACE__CARET__CARET_TOP__WEIGHT_BOLD__SIZE_8} color="red" />
+      <Icon
+        type={Icon.TYPE.INTERFACE__CARET__CARET_TOP__WEIGHT_BOLD__SIZE_8}
+        color="red"
+      />
     );
   } else {
     return (
-      <Icon type={Icon.TYPE.INTERFACE__SIGN__CHECKMARK__V_ALTERNATE__WEIGHT_BOLD} color="green" />
+      <Icon
+        type={Icon.TYPE.INTERFACE__SIGN__CHECKMARK__V_ALTERNATE__WEIGHT_BOLD}
+        color="green"
+      />
     );
   }
 };
 
 export const checkMeasurement = (type, value) => {
+  if (!type || value == 0 || ["unitless"].includes(type)) {
+    return "";
+  }
   if (["timespanMs", "millisecond"].includes(type)) {
-    return `${value} ms`;
-  } else if (type === "bytes") {
-
-    return `${value/1000} KiB`;
+    return `${Math.round((value + Number.EPSILON) * 100) / 100} ms`;
+  } else if (["bytes", "byte"].includes(type)) {
+    return `${Math.round((value / 1000 + Number.EPSILON) * 100) / 100} KiB`;
+  } else if (["informative"].includes(type)) {
+    return "";
   }
   return "ts";
-}
+};
 
 export const parseUrl = (url) => {
   try {
@@ -92,4 +105,14 @@ export const parseUrl = (url) => {
     console.error(e);
     return;
   }
+};
+
+export const sortDetails = (unsorted) => {
+  return unsorted.sort((a, b) => {
+    return (
+      (a.score === null) - (b.score === null) ||
+      +(a.score > b.score) ||
+      -(a.score < b.score)
+    );
+  });
 };
