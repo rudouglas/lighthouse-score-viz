@@ -60,28 +60,30 @@ export default class DetailsTable extends React.Component {
                   </TableRowCell>
                 );
               } else if (key === "node") {
-                console.log(item["url"]);
                 return (
                   <TableRowCell>
                     <img
                       src={item["url"]}
                       style={{ width: "24px", height: "24px" }}
                     />
+                    {item['label']}
                   </TableRowCell>
                 );
               } else if (key === 'source') {
-                const { value, additionalValue } = parseUrl(item['url']);
+                console.log({item})
+                const { value, additionalValue } = parseUrl(item.source['url']);
                 return (
                   <TableRowCell additionalValue={`${additionalValue}`}>
                     <Link to={item["url"]}>{value}</Link>
                   </TableRowCell>
                 );
               }
-              const { valueType } = headings.filter(
+              console.log({key})
+              const { valueType,itemType } = headings.filter(
                 (heading) => heading.key === key
               )[0];
-              const measurement = checkMeasurement(valueType, item[key]);
-              console.log({ valueType });
+              console.log({itemType})
+              const measurement = checkMeasurement(valueType || itemType, item[key]);
               return <TableRowCell>{`${measurement}`}</TableRowCell>;
             })}
           </TableRow>

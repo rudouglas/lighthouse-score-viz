@@ -80,15 +80,26 @@ export const getSymbol = (score) => {
 };
 
 export const checkMeasurement = (type, value) => {
-  if (!type || value == 0 || ["unitless"].includes(type)) {
+  if (!type || ["unitless"].includes(type)) {
     return "";
   }
   if (["timespanMs", "millisecond"].includes(type)) {
     return `${Math.round((value + Number.EPSILON) * 100) / 100} ms`;
-  } else if (["bytes", "byte"].includes(type)) {
+  } else if (["bytes", "byte", 'totalBytes'].includes(type)) {
     return `${Math.round((value / 1000 + Number.EPSILON) * 100) / 100} KiB`;
   } else if (["informative"].includes(type)) {
     return "";
+  } else if (["ms"].includes(type)) {
+    if (value >= 1000 * 60 * 60) {
+      return `${Math.round((value / 1000 / 60 / 60 + Number.EPSILON) * 100) / 100} hr`
+    } else if (value >= 1000 * 60) {
+      return `${Math.round((value / 1000 / 60 + Number.EPSILON) * 100) / 100} mins`
+    }else if (value >= 1000) {
+      return `${Math.round((value / 1000 + Number.EPSILON) * 100) / 100} s`
+    }
+    return value == 0 ? 'None' : `${Math.round((value + Number.EPSILON) * 100) / 100} ms`;
+  } else if (["text",'numeric'].includes(type)) {
+    return value;
   }
   return "ts";
 };
