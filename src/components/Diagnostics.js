@@ -5,7 +5,7 @@ import {
   HeadingText,
   Grid,
   GridItem,
-  NrqlQuery,
+  BlockText,
   Spinner,
   AutoSizer,
   Tile,
@@ -18,98 +18,66 @@ import {
 } from "nr1";
 import Accordion from "../../src/components/Accordion";
 import { checkMeasurement, parseUrl, sortDetails } from "../../utils/helpers";
+const { EXCLUDED_TYPES } = require("../../utils/constants");
 import DetailsTable from "./DetailsTable";
-
+import CriticalRequestChain from "./CriticalRequestChain";
+import DebugTable from "./DebugTable";
 import "./accordion.css";
+const { createGzip } = require("zlib");
 
 export default class Diagnostics extends React.Component {
   constructor(props) {
     super(props);
   }
-  createOpportunityTable = (details) => {
-    const { headings, items } = details;
-    const tableKeys = headings.map((heading) => {
-      return heading.key;
-    });
-    return (
-      <Table items={items} multivalue>
-        <TableHeader>
-          {headings.map((heading) => (
-            <TableHeaderCell
-              value={({ item }) => item[heading.key]}
-              width={
-                heading.key === "node"
-                  ? "5%"
-                  : heading.key === "url"
-                  ? "60%"
-                  : "20%"
-              }
-            >
-              {heading.label || heading.text}
-            </TableHeaderCell>
-          ))}
-        </TableHeader>
-
-        {({ item }) => (
-          <TableRow>
-            {tableKeys.map((key) => {
-              if (key === "url" && item[key].startsWith("http")) {
-                const { value, additionalValue } = parseUrl(item[key]);
-                return (
-                  <TableRowCell additionalValue={`${additionalValue}`}>
-                    <Link to={item["url"]}>{value}</Link>
-                  </TableRowCell>
-                );
-              } else if (key === "node") {
-                console.log(item["url"]);
-                return (
-                  <TableRowCell>
-                    <img
-                      src={item["url"]}
-                      style={{ width: "24px", height: "24px" }}
-                    />
-                  </TableRowCell>
-                );
-              }
-              const { valueType } = headings.filter(
-                (heading) => heading.key === key
-              )[0];
-              const measurement = checkMeasurement(valueType, item[key]);
-              console.log({ valueType });
-              return <TableRowCell>{`${measurement}`}</TableRowCell>;
-            })}
-          </TableRow>
-        )}
-      </Table>
-    );
-  };
 
   render() {
-    const { diagnostics: unsorted } = this.props;
+    const { diagnostics: unsorted, visualization } = this.props;
     console.log({ unsorted });
     const diagnostics = sortDetails(unsorted);
     console.log({ diagnostics });
     return (
       <>
-        <HeadingText spacingType={[HeadingText.SPACING_TYPE.LARGE]}>
-          diagnostics
+        <HeadingText
+          type={HeadingText.TYPE.HEADING_3}
+          spacingType={[HeadingText.SPACING_TYPE.LARGE]}
+          style={{ marginTop: "50px"}}
+        >
+          Diagnostics
         </HeadingText>
-        {diagnostics.map((diagnostic) => {
-          return (
-            <Accordion {...diagnostic}>
-              {Object.entries(diagnostic).map((diag) => (
-                <p>{JSON.stringify(diag)}</p>
-              ))}
-              {
-                <div>
-                  {diagnostic.details?.type === "table" && (
-                    <DetailsTable details={diagnostic.details} />
-                  )}
-                </div>
-              }
-            </Accordion>
-          );
-        })}
+        <BlockText spacingType={[BlockText.SPACING_TYPE.LARGE]}>
+          These suggestions can help your page load faster. They don't{" "}
+          <Link to="https://web.dev/performance-scoring/?utm_source=lighthouse&utm_medium=node">
+            directly affect
+          </Link>{" "}
+          the {visualization} score.
+        </BlockText>
+        ;
+        {diagnostics.map(
+          (diagnostic) =>
+            !EXCLUDED_TYPES.includes(diagnostic.details?.type) && (
+              <Accordion {...diagnostic}>
+                {Object.entries(diagnostic).map((diag) => (
+                  <p>{JSON.stringify(diag)}</p>
+                ))}
+                {
+                  <div>
+                    {["table", "opportunity"].includes(
+                      diagnostic.details?.type
+                    ) && <DetailsTable details={diagnostic.details} />}
+                    {diagnostic.details?.type === "criticalrequestchain" && (
+                      <CriticalRequestChain
+                        chains={diagnostic.details.chains}
+                        diagnostic={diagnostic}
+                      />
+                    )}
+                    {diagnostic.details?.type === "debugdata" && (
+                      <DebugTable debugData={diagnostic.details.items} />
+                    )}
+                  </div>
+                }
+              </Accordion>
+            )
+        )}
       </>
     );
   }

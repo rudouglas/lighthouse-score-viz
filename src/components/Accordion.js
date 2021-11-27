@@ -12,7 +12,7 @@ import {
 } from "nr1";
 import { getSymbol, checkMeasurement, getMainColor } from "../../utils/helpers";
 import DisplayValue from "./DisplayValue";
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown from "react-markdown";
 import "./accordion.css";
 
 export default class Accordion extends React.Component {
@@ -27,7 +27,7 @@ export default class Accordion extends React.Component {
   }
 
   toggleAccordion = (e) => {
-    console.log(e.target.className)
+    console.log(e.target.className);
     if (this.state.accordionIsOpen) {
       this.setState({ accordionIsOpen: false, display: "none" });
     } else {
@@ -35,19 +35,34 @@ export default class Accordion extends React.Component {
     }
   };
   render() {
-    const { score, title, description, children, numericValue, numericUnit, displayValue } =
-      this.props;
-    const color = score !== null ? getMainColor(score * 100) : 'grey';
-    const formatTitle = title.replace('`width`', `<span style={{color: '#0099ff'}}>width</span>`)
+    const {
+      score,
+      title,
+      description,
+      children,
+      numericValue,
+      numericUnit,
+      displayValue,
+    } = this.props;
+    const color = score !== null ? getMainColor(score * 100) : "grey";
+    const code = /`(.*?)`/g
+    const formatTitle = title.replace(
+      code,
+      `<span style="color: blue;">$1</span>`
+    );
     return (
       <div className="accordion__section">
-        <div className="accordion__header" onClick={(e) => this.toggleAccordion(e)}>
+        <div
+          className="accordion__header"
+          onClick={(e) => this.toggleAccordion(e)}
+        >
           <Tile onClick={console.log}>
             <Grid>
               <GridItem columnSpan={10}>
                 <HeadingText>
-                  {getSymbol(score)}{' '}
-                  {title}{' '}
+                  {getSymbol(score)} <span dangerouslySetInnerHTML={{
+                    __html: formatTitle
+                  }} /> {" "}
                   <DisplayValue color={color} displayValue={displayValue} />
                 </HeadingText>
               </GridItem>
@@ -63,11 +78,11 @@ export default class Accordion extends React.Component {
           className="accordion__content"
           style={{ display: `${this.state.display}` }}
         >
-          <Card className="EmptyState">
-            <CardBody className="EmptyState-cardBody">
+          <Card>
+            <CardBody>
               <HeadingText
                 spacingType={[HeadingText.SPACING_TYPE.LARGE]}
-                type={HeadingText.TYPE.HEADING_3}
+                type={HeadingText.TYPE.HEADING_4}
               >
                 <ReactMarkdown children={description} />
               </HeadingText>

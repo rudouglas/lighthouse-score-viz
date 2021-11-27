@@ -1,7 +1,7 @@
 import React from "react";
 import {
   Card,
-  CardBody,
+  BlockText,
   HeadingText,
   Grid,
   GridItem,
@@ -10,11 +10,6 @@ import {
   AutoSizer,
   Tile,
   Link,
-  Table,
-  TableHeaderCell,
-  TableRow,
-  TableHeader,
-  TableRowCell,
 } from "nr1";
 import Accordion from "../../src/components/Accordion";
 import { checkMeasurement, parseUrl, sortDetails } from "../../utils/helpers";
@@ -28,14 +23,25 @@ export default class Opportunities extends React.Component {
   }
 
   render() {
-    const { opportunities: unsorted } = this.props;
+    const { opportunities: unsorted, visualization } = this.props;
     const opportunities = sortDetails(unsorted);
 
     return (
       <>
-        <HeadingText spacingType={[HeadingText.SPACING_TYPE.LARGE]}>
+        <HeadingText
+          type={HeadingText.TYPE.HEADING_3}
+          spacingType={[HeadingText.SPACING_TYPE.LARGE]}
+        >
           Opportunities
         </HeadingText>
+        <BlockText spacingType={[BlockText.SPACING_TYPE.LARGE]}>
+          These suggestions can help your page load faster. They don't{" "}
+          <Link to="https://web.dev/performance-scoring/?utm_source=lighthouse&utm_medium=node">
+            directly affect
+          </Link>{" "}
+          the {visualization} score.
+        </BlockText>
+        ;
         {opportunities.map((opportunity) => {
           return (
             <Accordion {...opportunity}>
@@ -44,9 +50,9 @@ export default class Opportunities extends React.Component {
               ))}
               {
                 <div>
-                  {['table', 'opportunity'].includes(opportunity.details?.type) && (
-                    <DetailsTable details={opportunity.details} />
-                  )}
+                  {["table", "opportunity"].includes(
+                    opportunity.details?.type
+                  ) && <DetailsTable details={opportunity.details} />}
                 </div>
               }
             </Accordion>

@@ -100,8 +100,12 @@ export default class Passed extends React.Component {
     const { passed } = this.props;
     return (
       <>
-        <HeadingText spacingType={[HeadingText.SPACING_TYPE.LARGE]}>
-          Passed
+        <HeadingText 
+          type={HeadingText.TYPE.HEADING_3}
+          spacingType={[HeadingText.SPACING_TYPE.LARGE]}
+          style={{ marginTop: "50px", marginBottom: "20px" }}
+        >
+          Passed audits <span style={{ color: "green" }}>({passed.length})</span>
         </HeadingText>
         {passed.map((pass) => {
           return (
@@ -111,7 +115,9 @@ export default class Passed extends React.Component {
               ))}
               {
                 <div>
-                  {pass.details?.type === "table" && (
+                  {["table", "opportunity"].includes(
+                      pass.details?.type
+                    ) && (
                     <DetailsTable details={pass.details} />
                   )}
                 </div>
