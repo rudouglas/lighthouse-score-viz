@@ -1,0 +1,39 @@
+{
+    "schemaType": "VISUALIZATION",
+    "id": "lighthouse-performance",
+    "displayName": "LighthousePerformance",
+    "description": "",
+    "configuration": [
+        {
+            "name": "nrqlQueries",
+            "title": "NRQL Queries",
+            "type": "collection",
+            "items": [
+                {
+                    "name": "accountId",
+                    "title": "Account ID",
+                    "description": "Account ID to be associated with the query",
+                    "type": "account-id"
+                },
+                {
+                    "name": "query",
+                    "title": "Query",
+                    "description": "NRQL query for visualization",
+                    "type": "nrql"
+                }
+            ]
+        },
+        {
+            "name": "showPassed",
+            "title": "Show Passed",
+            "description": "Whether to display passed checks in the Visualization",
+            "type": "boolean"
+        },
+        {
+            "name": "showNull",
+            "title": "Show Null Scored",
+            "description": "Whether to display checks that weren't scored",
+            "type": "boolean"
+        }
+    ]
+}

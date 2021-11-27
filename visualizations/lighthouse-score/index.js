@@ -20,6 +20,7 @@ import {
   BlockText,
   Link,
   Badge,
+  CollapsibleLayoutItem,
 } from "nr1";
 import NrqlQueryError from "../../src/nrql-query-error";
 import NoDataState from "../../src/no-data-state";
@@ -327,21 +328,27 @@ export default class CircularProgressBar extends React.Component {
                               collapseGapBefore
                               collapseGapAfter
                             >
-                              <Badge type={Badge.TYPE.CRITICAL}>{`0-${mainThresholds.moderate - 1}`}</Badge>
+                              <Badge type={Badge.TYPE.CRITICAL}>{`0-${
+                                mainThresholds.moderate - 1
+                              }`}</Badge>
                             </GridItem>
                             <GridItem
                               columnSpan={2}
                               collapseGapBefore
                               collapseGapAfter
                             >
-                              <Badge type={Badge.TYPE.WARNING}>{`${mainThresholds.moderate}-${mainThresholds.good - 1}`}</Badge>
+                              <Badge type={Badge.TYPE.WARNING}>{`${
+                                mainThresholds.moderate
+                              }-${mainThresholds.good - 1}`}</Badge>
                             </GridItem>
                             <GridItem
                               columnSpan={2}
                               collapseGapBefore
                               collapseGapAfter
                             >
-                              <Badge type={Badge.TYPE.SUCCESS}>{`${mainThresholds.good}-100`}</Badge>
+                              <Badge
+                                type={Badge.TYPE.SUCCESS}
+                              >{`${mainThresholds.good}-100`}</Badge>
                             </GridItem>
                             <GridItem
                               columnSpan={2}
@@ -458,9 +465,20 @@ export default class CircularProgressBar extends React.Component {
                                           gapType={Grid.GAP_TYPE.SMALL}
                                         >
                                           <GridItem columnSpan={12}>
-                                            <BlockText>
-                                              {att.metadata.explanation}
-                                            </BlockText>
+                                            <CollapsibleLayoutItem
+                                              triggerType={
+                                                CollapsibleLayoutItem
+                                                  .TRIGGER_TYPE.INBUILT
+                                              }
+                                              type={
+                                                CollapsibleLayoutItem.TYPE
+                                                  .SPLIT_LEFT
+                                              }
+                                            >
+                                              <BlockText>
+                                                {att.metadata.explanation}
+                                              </BlockText>
+                                            </CollapsibleLayoutItem>
                                           </GridItem>
                                           <GridItem columnSpan={12}>
                                             <Link to={att.metadata.link}>
