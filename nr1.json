@@ -1,6 +1,6 @@
 {
   "schemaType": "NERDPACK",
   "id": "0b257bf3-a4bc-45aa-a073-acf038ab6c1d",
-  "displayName": "LighthouseScore",
-  "description": "Nerdpack lighthouse-score"
+  "displayName": "Lighthouse Score",
+  "description": "Custom Visualizations for displaying Lighthouse score and test results from your site"
 }
