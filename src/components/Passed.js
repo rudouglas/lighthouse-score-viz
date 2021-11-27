@@ -110,9 +110,6 @@ export default class Passed extends React.Component {
         {passed.map((pass) => {
           return (
             <Accordion {...pass}>
-              {Object.entries(pass).map((opp) => (
-                <p>{JSON.stringify(opp)}</p>
-              ))}
               {
                 <div>
                   {["table", "opportunity"].includes(

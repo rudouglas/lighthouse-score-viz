@@ -56,9 +56,6 @@ export default class Diagnostics extends React.Component {
           (diagnostic) =>
             !EXCLUDED_TYPES.includes(diagnostic.details?.type) && (
               <Accordion {...diagnostic}>
-                {Object.entries(diagnostic).map((diag) => (
-                  <p>{JSON.stringify(diag)}</p>
-                ))}
                 {
                   <div>
                     {["table", "opportunity"].includes(

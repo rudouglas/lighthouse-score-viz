@@ -45,9 +45,6 @@ export default class Opportunities extends React.Component {
         {opportunities.map((opportunity) => {
           return (
             <Accordion {...opportunity}>
-              {Object.entries(opportunity).map((opp) => (
-                <p>{JSON.stringify(opp)}</p>
-              ))}
               {
                 <div>
                   {["table", "opportunity"].includes(
