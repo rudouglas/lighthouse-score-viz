@@ -51,7 +51,6 @@ export default class Diagnostics extends React.Component {
           </Link>{" "}
           the {visualization} score.
         </BlockText>
-        ;
         {diagnostics.map(
           (diagnostic) =>
             !EXCLUDED_TYPES.includes(diagnostic.details?.type) && (

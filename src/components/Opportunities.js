@@ -41,7 +41,6 @@ export default class Opportunities extends React.Component {
           </Link>{" "}
           the {visualization} score.
         </BlockText>
-        ;
         {opportunities.map((opportunity) => {
           return (
             <Accordion {...opportunity}>
