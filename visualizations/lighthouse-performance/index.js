@@ -90,15 +90,12 @@ export default class LighthousePerformanceVisualization extends React.Component 
     const everythingElse = auditRefObject.filter(
       (audit) => !audit.details || audit.details.type !== "opportunity"
     );
-    console.log({ diagnostics });
-    const skipped = allOpportunities.filter((opp) => !opp.score);
     return {
       treemapData,
       diagnostics,
       auditRefObject,
       opportunities,
       passed,
-      skipped,
     };
   };
 
@@ -144,6 +141,8 @@ export default class LighthousePerformanceVisualization extends React.Component 
                 lighthouseVersion,
                 customEventSource,
                 requestedUrl,
+                finalUrl,
+                locale,
                 score,
                 title,
                 userAgent,
@@ -155,10 +154,8 @@ export default class LighthousePerformanceVisualization extends React.Component 
               const {
                 treemapData,
                 diagnostics,
-                auditRefObject,
                 opportunities,
                 passed,
-                skipped,
               } = this.transformData(resultData);
               // console.log({ auditRefObject, opportunities });
               return (
@@ -184,7 +181,7 @@ export default class LighthousePerformanceVisualization extends React.Component 
                       </Link>
                       .
                     </BlockText>
-                    <TreemapButton metadata={metadata} treemapData={treemapData} />
+                    <TreemapButton metadata={metadata} treemapData={treemapData} finalUrl={finalUrl} requestedUrl={requestedUrl} locale={locale} />
                     {"   "}<Lighthouse />
                   </div>
 
@@ -216,7 +213,7 @@ const EmptyState = () => (
       >
         An example NRQL query you can try is:
       </HeadingText>
-      <code>FROM lighthousePerformance SELECT * LIMIT 1</code>
+      <code>FROM lighthousePerformance SELECT * WHERE requestedUrl = 'https://developer.newrelic.com/' LIMIT 1</code>
     </CardBody>
   </Card>
 );

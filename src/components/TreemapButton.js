@@ -18,18 +18,18 @@ export default class TreemapButton extends React.Component {
 
   }
   render() {
-    const {metadata, treemapData} = this.props;
+    const {metadata, treemapData, locale, finalUrl, requestedUrl} = this.props;
     const payload = {
       lhr: {
-        requestedUrl: "https://developer.newrelic.com/",
-        finalUrl: "https://developer.newrelic.com/",
+        requestedUrl,
+        finalUrl,
         audits: {
           "script-treemap-data": treemapData,
         },
-        configSettings: { locale: "en-US" },
+        configSettings: { locale },
       },
     };
-    console.log({ treemapData, metadata });
+    console.log({metadata, treemapData, locale, finalUrl, requestedUrl});
     var deflated = zlib.deflateSync(JSON.stringify(payload)).toString("base64");
     console.log({ deflated });
     const url = "https://googlechrome.github.io/lighthouse/treemap/?gzip=1#";
