@@ -67,14 +67,18 @@ export default class SubItemTable extends React.Component {
         transformedItems.push(subKey);
       });
     });
-    console.log({items})
+    console.log({ items, headings, transformedItems });
     return (
       <Table items={transformedItems} multivalue>
         <TableHeader>
           {headings.map((heading) => (
             <TableHeaderCell
               value={({ item }) => item[heading]}
-              width={["url", "entity"].includes(heading.key) ? "60%" : "20%"}
+              width={
+                ["url", "entity"].includes(heading.key)
+                  ? "60%"
+                  : "20%"
+              }
             >
               {heading.text || heading.label || heading.key}
             </TableHeaderCell>
@@ -106,7 +110,7 @@ export default class SubItemTable extends React.Component {
                   return <TableRowCell>{item.url}</TableRowCell>;
                 }
               }
-              if (key === "url") {
+              if (["url"].includes(key)) {
                 if (item.subItems) {
                   return (
                     <TableRowCell>
@@ -127,6 +131,80 @@ export default class SubItemTable extends React.Component {
                   );
                 }
                 return <TableRowCell>{item.url}</TableRowCell>;
+              } else if (["scriptUrl"].includes(key)) {
+                if (item.subItems) {
+                  const { value, additionalValue } = parseUrl(item.scriptUrl);
+                  return (
+                    <TableRowCell>
+                      <Link to={item.scriptUrl}>{value}</Link>
+                      {"  "}
+                      <span>({additionalValue})</span>
+                    </TableRowCell>
+                  );
+                }
+                !item.scriptUrl && console.log({ item });
+                if (item.error) {
+                  return <TableRowCell>{item.error}</TableRowCell>;
+                }
+                if (item.scriptUrl?.startsWith("http")) {
+                  const { value, additionalValue } = parseUrl(item.scriptUrl);
+                  return (
+                    <TableRowCell
+                      additionalValue={`${additionalValue}`}
+                      style={{ marginLeft: "15px" }}
+                    >
+                      <Link to={item.scriptUrl}>{value}</Link>
+                    </TableRowCell>
+                  );
+                }
+                return <TableRowCell>{item.scriptUrl}</TableRowCell>;
+              } else if (["sourceMapUrl"].includes(key)) {
+                if (item.subItems) {
+                  const { value, additionalValue } = parseUrl(
+                    item.sourceMapUrl
+                  );
+                  return (
+                    <TableRowCell>
+                      <Link to={item.sourceMapUrl}>{value}</Link>
+                      {"  "}
+                      <span>({additionalValue})</span>
+                    </TableRowCell>
+                  );
+                }
+                !item.sourceMapUrl && console.log({ item });
+                if (item.sourceMapUrl?.startsWith("http")) {
+                  const { value, additionalValue } = parseUrl(
+                    item.sourceMapUrl
+                  );
+                  return (
+                    <TableRowCell
+                      additionalValue={`${additionalValue}`}
+                      style={{ marginLeft: "15px" }}
+                    >
+                      <Link to={item.sourceMapUrl}>{value}</Link>
+                    </TableRowCell>
+                  );
+                }
+                return <TableRowCell>{item.sourceMapUrl}</TableRowCell>;
+              } else if (key === "node") {
+                console.log({item})
+                if (item.node?.snippet) {
+                  return (
+                    <TableRowCell additionalValue={item.node.nodeLabel}>
+                      <span style={{ color: "blue" }}>{item.node.snippet}</span>
+                    </TableRowCell>
+                  );
+                } else if (item["url"]) {
+                  return (
+                    <TableRowCell>
+                      <img
+                        src={item["url"]}
+                        style={{ width: "24px", height: "24px" }}
+                      />
+                      {item["label"]}
+                    </TableRowCell>
+                  );
+                }
               }
               if (key === "signal") {
                 return <TableRowCell>{item[key]}</TableRowCell>;

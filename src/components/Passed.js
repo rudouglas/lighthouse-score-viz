@@ -81,7 +81,7 @@ export default class Passed extends React.Component {
                 (heading) => heading.key === key
               )[0];
               const measurement = checkMeasurement(valueType, item[key]);
-              console.log({ valueType });
+              // console.log({ valueType });
               return <TableRowCell>{`${measurement}`}</TableRowCell>;
             })}
           </TableRow>
@@ -99,7 +99,7 @@ export default class Passed extends React.Component {
   render() {
     const { passed } = this.props;
     return (
-      <>
+      <div style={{padding: "20px"}}>
         <HeadingText 
           type={HeadingText.TYPE.HEADING_3}
           spacingType={[HeadingText.SPACING_TYPE.LARGE]}
@@ -122,7 +122,7 @@ export default class Passed extends React.Component {
             </Accordion>
           );
         })}
-      </>
+      </div>
     );
   }
 }

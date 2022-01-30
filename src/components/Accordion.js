@@ -34,6 +34,7 @@ export default class Accordion extends React.Component {
       this.setState({ accordionIsOpen: true, display: "block" });
     }
   };
+
   render() {
     const {
       score,
@@ -44,9 +45,10 @@ export default class Accordion extends React.Component {
       numericUnit,
       displayValue,
     } = this.props;
+
     const color = score !== null ? getMainColor(score * 100) : "grey";
-    const code = /`(.*?)`/g
-    const formatTitle = title.replace(
+    const code = /`(.*?)`/g;
+    const formatTitle = title.replaceAll('<', '&lt;').replaceAll('>', '&gt;').replace(
       code,
       `<span style="color: blue;">$1</span>`
     );
@@ -60,9 +62,12 @@ export default class Accordion extends React.Component {
             <Grid>
               <GridItem columnSpan={10}>
                 <HeadingText>
-                  {getSymbol(score)} <span dangerouslySetInnerHTML={{
-                    __html: formatTitle
-                  }} /> {" "}
+                  {getSymbol(score)}{" "}
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: formatTitle,
+                    }}
+                  />{" "}
                   <DisplayValue color={color} displayValue={displayValue} />
                 </HeadingText>
               </GridItem>

@@ -16,7 +16,11 @@ import {
   TableHeader,
   TableRowCell,
 } from "nr1";
-import { checkMeasurement, parseUrl } from "../../utils/helpers";
+import {
+  checkMeasurement,
+  parseUrl,
+  capitalizeFirstLetter,
+} from "../../utils/helpers";
 import SubItemTable from "./SubItemTable";
 
 import "./accordion.css";
@@ -28,13 +32,15 @@ export default class DetailsTable extends React.Component {
 
   render() {
     const { headings, items } = this.props.details;
+
     const tableKeys = headings.map((heading) => {
       return heading.key;
     });
-    if (items.every((item) => item.subItems && !item.subItems.source)) {
-      console.log("Hello");
+    if (items.every((item) => item.subItems && !item.subItems.source && !item.node?.selector)) {
+      console.log("SubItems Source Table");
       return <SubItemTable details={this.props.details} />;
     }
+    console.log({ items, headings });
     return (
       <Table items={items} multivalue>
         <TableHeader>
@@ -46,6 +52,8 @@ export default class DetailsTable extends React.Component {
                   ? "5%"
                   : heading.key === "url"
                   ? "60%"
+                  : ["severity", "directive"].includes(heading.key)
+                  ? "10%"
                   : "20%"
               }
             >
@@ -66,7 +74,7 @@ export default class DetailsTable extends React.Component {
                     </TableRowCell>
                   );
                 }
-                console.log({ item });
+                // console.log({ item });
                 if (item.resourceType === "Image") {
                   return (
                     <TableRowCell additionalValue={item.mimeType}>
@@ -76,7 +84,7 @@ export default class DetailsTable extends React.Component {
                 }
                 return <TableRowCell>{item["url"]}</TableRowCell>;
               } else if (key === "node") {
-                // console.log({item})
+                console.log({item})
                 if (item.node?.snippet) {
                   return (
                     <TableRowCell additionalValue={item.node.nodeLabel}>
@@ -101,6 +109,35 @@ export default class DetailsTable extends React.Component {
                     <Link to={item["url"]}>{value}</Link>
                   </TableRowCell>
                 );
+              } else if (key === "sourceLocation") {
+                const {
+                  source,
+                  sourceLocation: { url },
+                } = item;
+                return (
+                  <TableRowCell
+                    additionalValue={`${capitalizeFirstLetter(source)}`}
+                  >
+                    <Link to={url}>{url}</Link>
+                  </TableRowCell>
+                );
+              } else if (["description", "directive"].includes(key)) {
+                return <TableRowCell>{item[key]}</TableRowCell>;
+              } else if (key === 'href') {
+                if (item.href.startsWith("http")) {
+                  const { value, additionalValue } = parseUrl(
+                    item.href
+                  );
+                  return (
+                    <TableRowCell
+                      additionalValue={`${additionalValue}`}
+                      style={{ marginLeft: "15px" }}
+                    >
+                      <Link to={item.href}>{value}</Link>
+                    </TableRowCell>
+                  );
+                }
+                return <TableRowCell>{item.href}</TableRowCell>;
               }
               // console.log({ key });
               const { valueType, itemType, granularity } = headings.filter(

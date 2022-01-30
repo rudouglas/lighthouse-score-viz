@@ -24,16 +24,28 @@
             ]
         },
         {
-            "name": "fill",
-            "title": "Fill color",
-            "description": "A fill color to override the default fill color",
-            "type": "string"
+            "name": "showPassed",
+            "title": "Show Passed",
+            "description": "Whether to display passed checks in the Visualization",
+            "type": "boolean"
         },
         {
-            "name": "stroke",
-            "title": "Stroke color",
-            "description": "A stroke color to override the default stroke color",
-            "type": "string"
+            "name": "showNull",
+            "title": "Show Null Scored",
+            "description": "Whether to display checks that weren't scored",
+            "type": "boolean"
+        },
+        {
+            "name": "showManual",
+            "title": "Show Manual Checks",
+            "description": "Whether to display checks that need to be performed manually",
+            "type": "boolean"
+        },
+        {
+            "name": "showNotApplicable",
+            "title": "Show Not Applicable",
+            "description": "Whether to display checks that are not applicable",
+            "type": "boolean"
         }
     ]
 }

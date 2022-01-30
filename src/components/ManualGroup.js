@@ -17,22 +17,22 @@ import DetailsTable from "./DetailsTable";
 
 import "./accordion.css";
 
-export default class Opportunities extends React.Component {
+export default class ManualGroup extends React.Component {
   constructor(props) {
     super(props);
   }
 
   render() {
-    const { opportunities: unsorted, visualization } = this.props;
-    const opportunities = sortDetails(unsorted);
-
+    const { manualGroup: unsorted, visualization } = this.props;
+    const manuals = sortDetails(unsorted);
+    console.log({ manuals });
     return (
-      <div style={{padding: "20px"}}>
+      <>
         <HeadingText
           type={HeadingText.TYPE.HEADING_3}
           spacingType={[HeadingText.SPACING_TYPE.LARGE]}
         >
-          Opportunities
+          Additional items to check manually <span style={{ color: "grey" }}>({manuals.length})</span>
         </HeadingText>
         <BlockText spacingType={[BlockText.SPACING_TYPE.LARGE]}>
           These suggestions can help your page load faster. They don't{" "}
@@ -41,20 +41,12 @@ export default class Opportunities extends React.Component {
           </Link>{" "}
           the {visualization} score.
         </BlockText>
-        {opportunities.map((opportunity) => {
+        {manuals.map((manual) => {
           return (
-            <Accordion {...opportunity}>
-              {
-                <div>
-                  {["table", "opportunity"].includes(
-                    opportunity.details?.type
-                  ) && <DetailsTable details={opportunity.details} />}
-                </div>
-              }
-            </Accordion>
+            <Accordion {...manual} />
           );
         })}
-      </div>
+      </>
     );
   }
 }

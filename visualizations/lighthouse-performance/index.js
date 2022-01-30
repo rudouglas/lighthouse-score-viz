@@ -1,5 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { VictoryPie, VictoryAnimation, VictoryLabel } from "victory";
+
 import {
   Card,
   CardBody,
@@ -15,16 +17,30 @@ import {
   TableRow,
   TableHeader,
   TableRowCell,
+  Stack,
+  StackItem,
 } from "nr1";
+import { baseLabelStyles } from "../../src/theme";
 import Opportunities from "../../src/components/Opportunities";
 import Skipped from "../../src/components/Skipped";
 import Passed from "../../src/components/Passed";
 import Diagnostics from "../../src/components/Diagnostics";
 import TreemapButton from "../../src/components/TreemapButton";
 import Lighthouse from "../../src/components/Lighthouse";
+import ScoreVisualization from "../../src/components/ScoreVisualization";
 import { mainThresholds } from "../../utils/attributes";
-import { checkMeasurement, parseUrl } from "../../utils/helpers";
+import { getMainColor } from "../../utils/helpers";
 const zlib = require("zlib");
+import { QUANTILE_AT_VALUE } from "../../utils/math.js";
+const BOUNDS = {
+  X: 300,
+  Y: 300,
+};
+
+const LABEL_SIZE = 20;
+const LABEL_PADDING = 10;
+const CHART_WIDTH = BOUNDS.X + LABEL_PADDING * 2;
+const CHART_HEIGHT = BOUNDS.Y + LABEL_SIZE;
 
 export default class LighthousePerformanceVisualization extends React.Component {
   // Custom props you wish to be configurable in the UI must also be defined in
@@ -99,12 +115,6 @@ export default class LighthousePerformanceVisualization extends React.Component 
     };
   };
 
-  /**
-   * Format the given axis tick's numeric value into a string for display.
-   */
-  formatTick = (value) => {
-    return value.toLocaleString();
-  };
   render() {
     const { nrqlQueries, showPassed } = this.props;
 
@@ -148,45 +158,70 @@ export default class LighthousePerformanceVisualization extends React.Component 
                 userAgent,
                 x,
               } = resultData;
+              console.log({ score });
+              const scoreBy100 = score * 100;
+              const color = getMainColor(scoreBy100);
+              console.log({ color });
+              const series = [
+                { x: "progress", y: scoreBy100, color },
+                { x: "remainder", y: 100 - scoreBy100, color: "transparent" },
+              ];
               // fs.writeFileSync('thing.json', String(resultData))
               const metadata = data[0].metadata;
               // console.log(JSON.stringify(metadata))
-              const {
-                treemapData,
-                diagnostics,
-                opportunities,
-                passed,
-              } = this.transformData(resultData);
+              const { treemapData, diagnostics, opportunities, passed } =
+                this.transformData(resultData);
               // console.log({ auditRefObject, opportunities });
               return (
                 <>
-                  <div style={{ textAlign: "center" }}>
-                    <HeadingText
-                      type={HeadingText.TYPE.HEADING_1}
-                      spacingType={[HeadingText.SPACING_TYPE.MEDIUM]}
-                    >
-                      Performance
-                    </HeadingText>
-                    <BlockText
-                      style={{ fontSize: "12px" }}
-                      spacingType={[BlockText.SPACING_TYPE.MEDIUM]}
-                    >
-                      Values are estimated and may vary. The{" "}
-                      <Link to="https://web.dev/performance-scoring/?utm_source=lighthouse&utm_medium=node">
-                        performance score is calculated
-                      </Link>{" "}
-                      directly from these metrics.{" "}
-                      <Link to="https://googlechrome.github.io/lighthouse/scorecalc/#FCP=3603&SI=4617&LCP=3758&TTI=23188&TBT=4641&CLS=0&FMP=3603&device=mobile&version=8.6.0">
-                        See calculator
-                      </Link>
-                      .
-                    </BlockText>
-                    <TreemapButton metadata={metadata} treemapData={treemapData} finalUrl={finalUrl} requestedUrl={requestedUrl} locale={locale} />
-                    {"   "}<Lighthouse />
-                  </div>
+                  <Stack
+                    directionType={Stack.DIRECTION_TYPE.VERTICAL}
+                    style={{ textAlign: "center", width: "100%", alignItems: "center", paddingTop: "15px" }}
+                  >
+                    <StackItem style={{width: "200px"}}>
+                      <ScoreVisualization score={scoreBy100} color={color} series={series} />
+                    </StackItem>
+                    <StackItem>
+                      <HeadingText
+                        type={HeadingText.TYPE.HEADING_1}
+                        spacingType={[HeadingText.SPACING_TYPE.MEDIUM]}
+                      >
+                        Performance
+                      </HeadingText>
+                      <BlockText
+                        style={{ fontSize: "12px" }}
+                        spacingType={[BlockText.SPACING_TYPE.MEDIUM]}
+                      >
+                        Values are estimated and may vary. The{" "}
+                        <Link to="https://web.dev/performance-scoring/?utm_source=lighthouse&utm_medium=node">
+                          performance score is calculated
+                        </Link>{" "}
+                        directly from these metrics.{" "}
+                        <Link to="https://googlechrome.github.io/lighthouse/scorecalc/#FCP=3603&SI=4617&LCP=3758&TTI=23188&TBT=4641&CLS=0&FMP=3603&device=mobile&version=8.6.0">
+                          See calculator
+                        </Link>
+                        .
+                      </BlockText>
+                      <TreemapButton
+                        metadata={metadata}
+                        treemapData={treemapData}
+                        finalUrl={finalUrl}
+                        requestedUrl={requestedUrl}
+                        locale={locale}
+                      />
+                      {"   "}
+                      <Lighthouse />
+                    </StackItem>
+                  </Stack>
 
-                  <Opportunities opportunities={opportunities} visualization="Performance"/>
-                  <Diagnostics diagnostics={diagnostics} visualization="Performance" />
+                  <Opportunities
+                    opportunities={opportunities}
+                    visualization="Performance"
+                  />
+                  <Diagnostics
+                    diagnostics={diagnostics}
+                    visualization="Performance"
+                  />
                   {showPassed && <Passed passed={passed} />}
                 </>
               );
@@ -213,7 +248,10 @@ const EmptyState = () => (
       >
         An example NRQL query you can try is:
       </HeadingText>
-      <code>FROM lighthousePerformance SELECT * WHERE requestedUrl = 'https://developer.newrelic.com/' LIMIT 1</code>
+      <code>
+        FROM lighthousePerformance SELECT * WHERE requestedUrl =
+        'https://developer.newrelic.com/' LIMIT 1
+      </code>
     </CardBody>
   </Card>
 );

@@ -24,23 +24,34 @@
             ]
         },
         {
-            "name": "thresholds",
-            "title": "Thresholds",
-            "type": "namespace",
-            "items": [
-                {
-                    "name": "criticalThreshold",
-                    "title": "Critical threshold",
-                    "description": "Value at which progress is displayed as critical",
-                    "type": "number"
-                },
-                {
-                    "name": "highValuesAreSuccess",
-                    "title": "Above threshold is success",
-                    "description": "If toggled on, values above the threshold display as successful. Otherwise, values at or above the threshold display as critical.",
-                    "type": "boolean"
-                }
-            ]
+            "name": "showOverallScore",
+            "title": "Show overall score",
+            "description": "Whether to display the overall score",
+            "type": "boolean"
+        },
+        {
+            "name": "showDescriptions",
+            "title": "Show Descriptions",
+            "description": "Whether to display the description of each attribute",
+            "type": "boolean"
+        },
+        {
+            "name": "showCategoryScores",
+            "title": "Show Category Scores",
+            "description": "Whether to display the individual scores for each category",
+            "type": "boolean"
+        },
+        {
+            "name": "showCoreScores",
+            "title": "Show Core Vital Scores",
+            "description": "Whether to display the Core Vital scores for each attribute",
+            "type": "boolean"
+        },
+        {
+            "name": "showScoreGuide",
+            "title": "Show Score Guide",
+            "description": "Whether to display the score guide for each attribute",
+            "type": "boolean"
         }
     ]
 }

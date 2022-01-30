@@ -3,6 +3,7 @@ import { ATTRIBUTES, mainThresholds } from "./attributes";
 
 export const NBSP = "\xa0";
 export const numberFormatter = new Intl.NumberFormat();
+export const capitalizeFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
 // thx Lighthouse's util.js
 export function arithmeticMean(items) {
@@ -122,7 +123,7 @@ export const parseUrl = (url) => {
     const hostname = parsedUrl.hostname;
     const removeHost = url.split(hostname);
     const pathname = url.replace(removeHost[0], "").replace(hostname, "");
-    // console.log(parsedUrl);
+    console.log(parsedUrl);
     return { value: pathname, additionalValue: hostname };
   } catch (e) {
     console.error(e);
@@ -139,3 +140,14 @@ export const sortDetails = (unsorted) => {
     );
   });
 };
+
+export const convertAuditRef = (rawData) => {
+  const auditRefs = Object.keys(rawData)
+      .filter((key) => key.includes("auditRefs_"))
+      .reduce((res, key) => ((res[key] = rawData[key]), res), {});
+  const auditRefString = Object.keys(auditRefs).map(
+    (key, index) => auditRefs[`auditRefs_${index}`]
+  );
+
+    return JSON.parse(auditRefString.join(""));
+}

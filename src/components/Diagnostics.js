@@ -36,7 +36,8 @@ export default class Diagnostics extends React.Component {
     const diagnostics = sortDetails(unsorted);
     console.log({ diagnostics });
     return (
-      <>
+      <div style={{padding: "20px"}}>
+
         <HeadingText
           type={HeadingText.TYPE.HEADING_3}
           spacingType={[HeadingText.SPACING_TYPE.LARGE]}
@@ -74,7 +75,7 @@ export default class Diagnostics extends React.Component {
               </Accordion>
             )
         )}
-      </>
+      </div>
     );
   }
 }

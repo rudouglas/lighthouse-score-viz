@@ -1,5 +1,5 @@
 export const ATTRIBUTES = {
-  ["custom.firstContentfulPaint"]: {
+  ["firstContentfulPaint"]: {
     name: "First Contentful Paint (FCP)",
     id: "fcp",
     weight: 10,
@@ -10,7 +10,7 @@ export const ATTRIBUTES = {
     scores: { fast: 1.8, mid: 3 },
     metrics: {weight: 0.10, median: 1600, p10: 934},
   },
-  ["custom.largestContentfulPaint"]: {
+  ["largestContentfulPaint"]: {
     name: "Largest Contentful Paint (LCP)",
     id: "lcp",
     weight: 25,
@@ -21,7 +21,7 @@ export const ATTRIBUTES = {
     scores: { fast: 2.5, mid: 4 },
     metrics: {weight: 0.25, median: 2400, p10: 1200},
   },
-  ["custom.interactive"]: {
+  ["interactive"]: {
     name: "Time to Interactive (TTI)",
     id: "tti",
     weight: 10,
@@ -32,7 +32,7 @@ export const ATTRIBUTES = {
     scores: { fast: 3.8, mid: 7.3 },
     metrics: {weight: 0.10, median: 4500, p10: 2468},
   },
-  ["custom.totalBlockingTime"]: {
+  ["totalBlockingTime"]: {
     name: "Total Blocking Time (TBT)",
     id: "tbt",
     weight: 30,
@@ -43,7 +43,7 @@ export const ATTRIBUTES = {
     scores: { fast: 0.2, mid: 0.6 },
     metrics: {weight: 0.30, median: 350, p10: 150},
   },
-  ["custom.cumulativeLayoutShift"]: {
+  ["cumulativeLayoutShift"]: {
     name: "Cumulative Layout Shift (CLS)",
     id: "cls",
     weight: 15,
@@ -54,7 +54,7 @@ export const ATTRIBUTES = {
     scores: { fast: 0.1, mid: 0.25 },
     metrics: {weight: 0.15, median: 0.25, p10: 0.1},
   },
-  ["custom.speedIndex"]: {
+  ["speedIndex"]: {
     name: "Speed Index (SI)",
     id: "si",
     weight: 10,
