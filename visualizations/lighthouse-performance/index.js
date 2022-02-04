@@ -176,10 +176,19 @@ export default class LighthousePerformanceVisualization extends React.Component 
                 <>
                   <Stack
                     directionType={Stack.DIRECTION_TYPE.VERTICAL}
-                    style={{ textAlign: "center", width: "100%", alignItems: "center", paddingTop: "15px" }}
+                    style={{
+                      textAlign: "center",
+                      width: "100%",
+                      alignItems: "center",
+                      paddingTop: "15px",
+                    }}
                   >
-                    <StackItem style={{width: "200px"}}>
-                      <ScoreVisualization score={scoreBy100} color={color} series={series} />
+                    <StackItem style={{ width: "200px" }}>
+                      <ScoreVisualization
+                        score={scoreBy100}
+                        color={color}
+                        series={series}
+                      />
                     </StackItem>
                     <StackItem>
                       <HeadingText
@@ -189,7 +198,7 @@ export default class LighthousePerformanceVisualization extends React.Component 
                         Performance
                       </HeadingText>
                       <BlockText
-                        style={{ fontSize: "12px" }}
+                        style={{ fontSize: "1.4em", lineHeight: "2em" }}
                         spacingType={[BlockText.SPACING_TYPE.MEDIUM]}
                       >
                         Values are estimated and may vary. The{" "}

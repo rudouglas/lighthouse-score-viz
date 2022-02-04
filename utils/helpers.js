@@ -39,6 +39,7 @@ export function calculateRating(score) {
 }
 
 export const getMainColor = (value) => {
+  console.log({ value });
   if (value != null && value < mainThresholds.moderate) {
     return "red";
   } else if (value >= mainThresholds.good) {
@@ -150,4 +151,13 @@ export const convertAuditRef = (rawData) => {
   );
 
     return JSON.parse(auditRefString.join(""));
+}
+
+export const parseScoreFromNrqlResult = (data) => {
+  const filtered = data.find((point) => Object.keys(point.data[0]).some(key => key.includes('score')));
+  console.log({filtered})
+  const usedKey = Object.keys(filtered?.data[0]).find(key => key.includes('score'));
+  console.log({usedKey})
+  const result = filtered?.data[0][usedKey];
+  return Math.round(result * 100);
 }

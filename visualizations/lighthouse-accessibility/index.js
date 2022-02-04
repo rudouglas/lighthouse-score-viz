@@ -25,6 +25,7 @@ import GenericGroup from "../../src/components/GenericGroup";
 import { mainThresholds } from "../../utils/attributes";
 import { getMainColor } from "../../utils/helpers";
 import ScoreVisualization from "../../src/components/ScoreVisualization";
+import { manual } from "prismjs/components/prism-core";
 const zlib = require("zlib");
 
 export default class LighthouseAccessibilityVisualization extends React.Component {
@@ -66,24 +67,10 @@ export default class LighthouseAccessibilityVisualization extends React.Componen
     );
 
     const auditRefObject = JSON.parse(auditRefString.join(""));
-    // console.log({ treemapData, auditRefObject });
+    console.log({ auditRefObject });
     const notApplicable = auditRefObject.filter(
       (audit) => audit.scoreDisplayMode === "notApplicable"
     );
-    // console.log({ ariaGroup });
-    const everythingElse = auditRefObject.filter(
-      (audit) =>
-        !["notApplicable", "manual"].includes(audit.scoreDisplayMode) &&
-        ![
-          "a11y-aria",
-          "a11y-names-labels",
-          "a11y-color-contrast",
-          "a11y-navigation",
-          "a11y-language",
-        ].includes(audit.group)
-    );
-    // console.log({ notApplicable, everythingElse });
-
     const diagnostics = auditRefObject.filter((audit) =>
       showNull
         ? !audit.score ||
@@ -95,7 +82,7 @@ export default class LighthouseAccessibilityVisualization extends React.Componen
           audit.details.type !== "opportunity" &&
           audit.score < mainThresholds.good / 100
     );
-
+    console.log({ diagnostics });
     const ariaGroup = diagnostics.filter(
       (audit) => audit.group === "a11y-aria"
     );
@@ -120,13 +107,17 @@ export default class LighthouseAccessibilityVisualization extends React.Componen
     const bestPracticeGroup = diagnostics.filter(
       (audit) => audit.group === "a11y-best-practices"
     );
-    // console.log({ manualGroup });
+    const audioVideoGroup = diagnostics.filter(
+      (audit) => audit.group === "a11y-audio-video"
+    );
+    const groups1 = diagnostics.map((audit) => audit.group);
+    const groups2 = [...new Set(auditRefObject.map((audit) => audit.group))];
+    console.log({ groups1, groups2 });
     const passed = auditRefObject.filter(
       (audit) => audit.score && audit.score >= mainThresholds.good / 100
     );
     return {
       notApplicable,
-      everythingElse,
       ariaGroup,
       namesLabelsGroup,
       contrastGroup,
@@ -137,11 +128,13 @@ export default class LighthouseAccessibilityVisualization extends React.Componen
       bestPracticeGroup,
       auditRefObject,
       passed,
+      audioVideoGroup,
     };
   };
 
   render() {
-    const { nrqlQueries, showPassed, showNotApplicable, showManual } = this.props;
+    const { nrqlQueries, showPassed, showNotApplicable, showManual } =
+      this.props;
 
     const nrqlQueryPropsAvailable =
       nrqlQueries &&
@@ -170,33 +163,20 @@ export default class LighthouseAccessibilityVisualization extends React.Componen
                 return <ErrorState />;
               }
               const resultData = data[0].data[0];
-              const {
-                timestamp,
-                id,
-                lighthouseVersion,
-                customEventSource,
-                requestedUrl,
-                finalUrl,
-                locale,
-                score,
-                title,
-                userAgent,
-                x,
-              } = resultData;
+              const { title } = resultData;
+              let score = resultData.score * 100;
               console.log({ score });
-              const scoreBy100 = score * 100;
-              const color = getMainColor(scoreBy100);
+              const color = getMainColor(score);
               console.log({ color });
               const series = [
-                { x: "progress", y: scoreBy100, color },
-                { x: "remainder", y: 100 - scoreBy100, color: "transparent" },
+                { x: "progress", y: score, color },
+                { x: "remainder", y: 100 - score, color: "transparent" },
               ];
               // fs.writeFileSync('thing.json', String(resultData))
               const metadata = data[0].metadata;
               // console.log(JSON.stringify(metadata))
               const {
                 notApplicable,
-                everythingElse,
                 ariaGroup,
                 namesLabelsGroup,
                 contrastGroup,
@@ -205,13 +185,13 @@ export default class LighthouseAccessibilityVisualization extends React.Componen
                 tablesListsGroup,
                 manualGroup,
                 bestPracticeGroup,
-                auditRefObject,
+                audioVideoGroup,
                 passed,
               } = this.transformData(resultData);
               // console.log({ auditRefObject, opportunities });
               return (
                 <>
-                <Stack
+                  <Stack
                     directionType={Stack.DIRECTION_TYPE.VERTICAL}
                     style={{
                       textAlign: "center",
@@ -222,42 +202,103 @@ export default class LighthouseAccessibilityVisualization extends React.Componen
                   >
                     <StackItem style={{ width: "200px" }}>
                       <ScoreVisualization
-                        score={scoreBy100}
+                        score={score}
                         color={color}
                         series={series}
                       />
                     </StackItem>
                     <StackItem>
-                    <HeadingText
-                      type={HeadingText.TYPE.HEADING_1}
-                      spacingType={[HeadingText.SPACING_TYPE.MEDIUM]}
-                    >
-                      Accessibility
-                    </HeadingText>
-                    <BlockText
-                      style={{ fontSize: "12px" }}
-                      spacingType={[BlockText.SPACING_TYPE.MEDIUM]}
-                    >
-                      These checks highlight opportunities to{" "}
-                      <Link to="https://developers.google.com/web/fundamentals/accessibility?utm_source=lighthouse&utm_medium=node">
-                        improve the accessibility of your web app
-                      </Link>
-                      . Only a subset of accessibility issues can be
-                      automatically detected so manual testing is also
-                      encouraged.{" "}
-                    </BlockText>
-                    <Lighthouse />
+                      <HeadingText
+                        type={HeadingText.TYPE.HEADING_1}
+                        spacingType={[HeadingText.SPACING_TYPE.MEDIUM]}
+                      >
+                        Accessibility
+                      </HeadingText>
+                      <BlockText
+                        style={{ fontSize: "1.4em", lineHeight: "2em" }}
+                        spacingType={[BlockText.SPACING_TYPE.MEDIUM]}
+                      >
+                        These checks highlight opportunities to{" "}
+                        <Link to="https://developers.google.com/web/fundamentals/accessibility?utm_source=lighthouse&utm_medium=node">
+                          improve the accessibility of your web app
+                        </Link>
+                        . Only a subset of accessibility issues can be
+                        automatically detected so manual testing is also
+                        encouraged.{" "}
+                      </BlockText>
+                      <Lighthouse />
                     </StackItem>
                   </Stack>
-                  {namesLabelsGroup.length > 0 && <GenericGroup group={namesLabelsGroup} title="Names and Labels" description="" />}
-                  {ariaGroup.length > 0 && <GenericGroup group={ariaGroup} title="Aria" description="" />}
-                  {contrastGroup.length > 0 && <GenericGroup group={contrastGroup} title="Contrast" description="" />}
-                  {navigationGroup.length > 0 && <GenericGroup group={navigationGroup} title="Navigation" description="" />}
-                  {languageGroup.length > 0 && <GenericGroup group={languageGroup} title="Language" description="" />}
-                  {tablesListsGroup.length > 0 && <GenericGroup group={tablesListsGroup} title="Tables and Lists" description="" />}
-                  {bestPracticeGroup.length > 0 && <GenericGroup group={bestPracticeGroup} title="Best Practices" description="" />}
-                  {showNotApplicable && <GenericGroup group={notApplicable} title="Not Applicable" description="" />}
-                  {showManual && <GenericGroup group={manualGroup} title="Additional items to check manually" description="" />}
+                  {namesLabelsGroup.length > 0 && (
+                    <GenericGroup
+                      group={namesLabelsGroup}
+                      title="Names and Labels"
+                      description=""
+                    />
+                  )}
+                  {ariaGroup.length > 0 && (
+                    <GenericGroup
+                      group={ariaGroup}
+                      title="Aria"
+                      description=""
+                    />
+                  )}
+                  {contrastGroup.length > 0 && (
+                    <GenericGroup
+                      group={contrastGroup}
+                      title="Contrast"
+                      description=""
+                    />
+                  )}
+                  {navigationGroup.length > 0 && (
+                    <GenericGroup
+                      group={navigationGroup}
+                      title="Navigation"
+                      description=""
+                    />
+                  )}
+                  {languageGroup.length > 0 && (
+                    <GenericGroup
+                      group={languageGroup}
+                      title="Language"
+                      description=""
+                    />
+                  )}
+                  {tablesListsGroup.length > 0 && (
+                    <GenericGroup
+                      group={tablesListsGroup}
+                      title="Tables and Lists"
+                      description=""
+                    />
+                  )}
+                  {bestPracticeGroup.length > 0 && (
+                    <GenericGroup
+                      group={bestPracticeGroup}
+                      title="Best Practices"
+                      description=""
+                    />
+                  )}
+                  {audioVideoGroup.length > 0 && (
+                    <GenericGroup
+                      group={audioVideoGroup}
+                      title="Audio and Video"
+                      description=""
+                    />
+                  )}
+                  {showNotApplicable && (
+                    <GenericGroup
+                      group={notApplicable}
+                      title="Not Applicable"
+                      description=""
+                    />
+                  )}
+                  {showManual && (
+                    <GenericGroup
+                      group={manualGroup}
+                      title="Additional items to check manually"
+                      description=""
+                    />
+                  )}
                   {showPassed && <Passed passed={passed} />}
                 </>
               );

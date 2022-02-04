@@ -67,7 +67,7 @@ export default class SubItemTable extends React.Component {
         transformedItems.push(subKey);
       });
     });
-    console.log({ items, headings, transformedItems });
+    // console.log({ items, headings, transformedItems });
     return (
       <Table items={transformedItems} multivalue>
         <TableHeader>
@@ -187,7 +187,7 @@ export default class SubItemTable extends React.Component {
                 }
                 return <TableRowCell>{item.sourceMapUrl}</TableRowCell>;
               } else if (key === "node") {
-                console.log({item})
+                // console.log({item})
                 if (item.node?.snippet) {
                   return (
                     <TableRowCell additionalValue={item.node.nodeLabel}>

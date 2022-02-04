@@ -59,19 +59,21 @@ export default class LighthousePWAVisualization extends React.Component {
   transformData = (rawData) => {
     const auditRefObject = convertAuditRef(rawData);
 
-    const pwaOptimized = auditRefObject.filter(
+    const diagnostics = auditRefObject.filter(
       (audit) =>
-        !["manual", "notApplicable"].includes(audit.scoreDisplayMode) &&
-        !["installable-manifest"].includes(audit.id)
+        !["manual", "notApplicable"].includes(audit.scoreDisplayMode)
+    );
+    const pwaOptimized = diagnostics.filter(
+      (audit) => audit.group === "pwa-optimized"
+    );
+    const installable = diagnostics.filter(
+      (audit) => audit.group === "pwa-installable"
     );
     const manualGroup = auditRefObject.filter(
       (audit) => audit.scoreDisplayMode === "manual"
     );
     const notApplicable = auditRefObject.filter(
       (audit) => audit.scoreDisplayMode === "notApplicable"
-    );
-    const installable = auditRefObject.filter(
-      (audit) => audit.id === "installable-manifest"
     );
     return {
       pwaOptimized,
@@ -165,7 +167,7 @@ export default class LighthousePWAVisualization extends React.Component {
                         Progressive Web App
                       </HeadingText>
                       <BlockText
-                        style={{ fontSize: "12px" }}
+                        style={{ fontSize: "1.4em", lineHeight: "2em" }}
                         spacingType={[BlockText.SPACING_TYPE.MEDIUM]}
                       >
                         These checks validate the aspects of a Progressive Web
@@ -227,7 +229,7 @@ const EmptyState = () => (
         An example NRQL query you can try is:
       </HeadingText>
       <code>
-        FROM lighthousePerformance SELECT * WHERE requestedUrl =
+        FROM lighthousePwa SELECT * WHERE requestedUrl =
         'https://developer.newrelic.com/' LIMIT 1
       </code>
     </CardBody>

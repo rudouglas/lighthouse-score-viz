@@ -30,7 +30,7 @@ export default class ScoreVisualization extends React.Component {
   render() {
     const { series, color, score } =
       this.props;
-
+    console.log({ series, color, score })
     return (
       <>
         <svg
@@ -59,7 +59,7 @@ export default class ScoreVisualization extends React.Component {
                 verticalAnchor="middle"
                 x={CHART_WIDTH / 2}
                 y={CHART_HEIGHT / 2}
-                text={`${Math.round(score * 100)}`}
+                text={`${Math.round(score)}`}
                 style={{ ...baseLabelStyles, fontSize: 45 }}
               />
             )}

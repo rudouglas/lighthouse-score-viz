@@ -11,10 +11,8 @@ import {
   StackItem,
 } from "nr1";
 import Opportunities from "../../src/components/Opportunities";
-import Skipped from "../../src/components/Skipped";
+import GenericGroup from "../../src/components/GenericGroup";
 import Passed from "../../src/components/Passed";
-import Diagnostics from "../../src/components/Diagnostics";
-import TreemapButton from "../../src/components/TreemapButton";
 import Lighthouse from "../../src/components/Lighthouse";
 import { mainThresholds } from "../../utils/attributes";
 import { getMainColor } from "../../utils/helpers";
@@ -28,6 +26,7 @@ export default class LighthouseBestPracticesVisualization extends React.Componen
   static propTypes = {
     showPassed: PropTypes.Boolean,
     showNull: PropTypes.Boolean,
+    showNotApplicable: PropTypes.Boolean,
     /**
      * An array of objects consisting of a nrql `query` and `accountId`.
      * This should be a standard prop for any NRQL based visualizations.
@@ -39,7 +38,6 @@ export default class LighthouseBestPracticesVisualization extends React.Componen
       })
     ),
   };
-
   /**
    * Restructure the data for a non-time-series, facet-based NRQL query into a
    * form accepted by the Recharts library's RadarChart.
@@ -57,16 +55,17 @@ export default class LighthouseBestPracticesVisualization extends React.Componen
     );
 
     const auditRefObject = JSON.parse(auditRefString.join(""));
-    const treemapData = auditRefObject.find(
-      (ref) => ref.details?.type === "treemap-data"
-    );
+    console.log({ auditRefObject });
     const allOpportunities = auditRefObject.filter(
       (audit) => audit.details && audit.details.type == "opportunity"
     );
+    console.log({ allOpportunities });
     const opportunities = allOpportunities.filter(
       (opp) => opp.score > 0 && opp.score < mainThresholds.good / 100
     );
-
+    const notApplicable = auditRefObject.filter(
+      (audit) => audit.scoreDisplayMode === "notApplicable"
+    );
     const diagnostics = auditRefObject.filter((audit) =>
       showNull
         ? !audit.score ||
@@ -78,14 +77,35 @@ export default class LighthouseBestPracticesVisualization extends React.Componen
           audit.details.type !== "opportunity" &&
           audit.score < mainThresholds.good / 100
     );
+
+    const generalGroup = diagnostics.filter(
+      (audit) => audit.group === "best-practices-general"
+    );
+    const browserCompatGroup = diagnostics.filter(
+      (audit) => audit.group === "best-practices-browser-compat"
+    );
+    const uxGroup = diagnostics.filter(
+      (audit) => audit.group === "best-practices-ux"
+    );
+    const trustSafetyGroup = diagnostics.filter(
+      (audit) => audit.group === "best-practices-trust-safety"
+    );
+    console.log({
+      generalGroup,
+      browserCompatGroup,
+      uxGroup,
+      trustSafetyGroup,
+    });
     const passed = auditRefObject.filter(
       (audit) => audit.score && audit.score >= mainThresholds.good / 100
     );
-    const everythingElse = auditRefObject.filter(
-      (audit) => !audit.details || audit.details.type !== "opportunity"
-    );
+
     return {
-      treemapData,
+      generalGroup,
+      notApplicable,
+      browserCompatGroup,
+      uxGroup,
+      trustSafetyGroup,
       diagnostics,
       auditRefObject,
       opportunities,
@@ -101,7 +121,7 @@ export default class LighthouseBestPracticesVisualization extends React.Componen
   };
 
   render() {
-    const { nrqlQueries, showPassed } = this.props;
+    const { nrqlQueries, showPassed, showNotApplicable } = this.props;
 
     const nrqlQueryPropsAvailable =
       nrqlQueries &&
@@ -130,32 +150,27 @@ export default class LighthouseBestPracticesVisualization extends React.Componen
                 return <ErrorState />;
               }
               const resultData = data[0].data[0];
-              const {
-                timestamp,
-                id,
-                lighthouseVersion,
-                customEventSource,
-                requestedUrl,
-                finalUrl,
-                locale,
-                score,
-                title,
-                userAgent,
-                x,
-              } = resultData;
-              // fs.writeFileSync('thing.json', String(resultData))
+
+              const { title } = resultData;
+              let score = resultData.score * 100;
               console.log({ score });
-              const scoreBy100 = score * 100;
-              const color = getMainColor(scoreBy100);
+              const color = getMainColor(score);
               console.log({ color });
               const series = [
-                { x: "progress", y: scoreBy100, color },
-                { x: "remainder", y: 100 - scoreBy100, color: "transparent" },
+                { x: "progress", y: score, color },
+                { x: "remainder", y: 100 - score, color: "transparent" },
               ];
               const metadata = data[0].metadata;
               // console.log(JSON.stringify(metadata))
-              const { treemapData, diagnostics, opportunities, passed } =
-                this.transformData(resultData);
+              const {
+                generalGroup,
+                browserCompatGroup,
+                uxGroup,
+                trustSafetyGroup,
+                notApplicable,
+                opportunities,
+                passed,
+              } = this.transformData(resultData);
               // console.log({ auditRefObject, opportunities });
               return (
                 <>
@@ -170,7 +185,7 @@ export default class LighthouseBestPracticesVisualization extends React.Componen
                   >
                     <StackItem style={{ width: "200px" }}>
                       <ScoreVisualization
-                        score={scoreBy100}
+                        score={score}
                         color={color}
                         series={series}
                       />
@@ -192,11 +207,38 @@ export default class LighthouseBestPracticesVisualization extends React.Componen
                       visualization="Performance"
                     />
                   )}
-                  <Diagnostics
-                    diagnostics={diagnostics}
-                    visualization="Performance"
-                  />
+                  {generalGroup.length > 0 && (
+                    <GenericGroup
+                      group={generalGroup}
+                      title="General"
+                      description=""
+                    />
+                  )}
+                  {browserCompatGroup.length > 0 && (
+                    <GenericGroup
+                      group={browserCompatGroup}
+                      title="Browser Compatibility"
+                      description=""
+                    />
+                  )}
+                  {uxGroup.length > 0 && (
+                    <GenericGroup group={uxGroup} title="UX" description="" />
+                  )}
+                  {trustSafetyGroup.length > 0 && (
+                    <GenericGroup
+                      group={trustSafetyGroup}
+                      title="Trust & Safety"
+                      description=""
+                    />
+                  )}
                   {showPassed && <Passed passed={passed} />}
+                  {showNotApplicable && notApplicable.length > 0 && (
+                    <GenericGroup
+                      group={notApplicable}
+                      title="Not applicable"
+                      description=""
+                    />
+                  )}
                 </>
               );
             }}

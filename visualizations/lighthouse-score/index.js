@@ -28,7 +28,7 @@ import { ATTRIBUTES, mainThresholds } from "../../utils/attributes";
 import {
   arithmeticMean,
   getSymbol,
-  checkMeasurement,
+  parseScoreFromNrqlResult,
   getMainColor,
 } from "../../utils/helpers";
 import { SCORE_QUERIES } from "../../utils/constants";
@@ -63,6 +63,9 @@ export default class CircularProgressBar extends React.Component {
       PropTypes.shape({
         accountId: PropTypes.number,
         query: PropTypes.string,
+        timeframe: PropTypes.string,
+        requestedUrl: PropTypes.string,
+        strategy: PropTypes.string,
       })
     ),
 
@@ -92,11 +95,18 @@ export default class CircularProgressBar extends React.Component {
     return Object.keys(ATTRIBUTES).map((att) => {
       const { name, explanation, weight, scores, metrics, link } =
         ATTRIBUTES[att];
-      const filtered = data.filter((point) => point.data[0][att]);
-      const result = filtered[0].data[0][att];
+      const filtered = data.find((point) =>
+        Object.keys(point.data[0]).some((key) => key.includes(att))
+      );
+      // console.log({ filtered });
+      const usedKey = Object.keys(filtered.data[0]).find((key) =>
+        key.includes(att)
+      );
+      // console.log({ usedKey });
+      const result = filtered.data[0][usedKey];
       const score = this.calculateScore(metrics, result);
-
-      console.log(score);
+      // console.log({ score, result });
+      // console.log(score);
       return {
         metadata: {
           id: att,
@@ -135,11 +145,11 @@ export default class CircularProgressBar extends React.Component {
   };
 
   nrqlInputIsValid = (data) => {
-    console.log(data);
+    // console.log(data);
     const allowedAttributes = Object.keys(ATTRIBUTES)
-      .map((key) => Object.keys(data[0].data[0]).includes(key))
+      .map((key) => JSON.stringify(data).includes(key))
       .filter(Boolean);
-    console.log({ allowedAttributes });
+    // console.log({ allowedAttributes });
     return allowedAttributes.length >= 6;
   };
 
@@ -220,11 +230,12 @@ export default class CircularProgressBar extends React.Component {
   render() {
     const {
       nrqlQueries,
-      showDescriptions,
-      showCategoryScores,
-      showCoreScores,
-      showScoreGuide,
-      showOverallScore,
+
+      showDescriptions = true,
+      showCategoryScores = true,
+      showCoreScores = true,
+      showScoreGuide = true,
+      showOverallScore = true,
     } = this.props;
 
     const nrqlQueryPropsAvailable =
@@ -235,6 +246,12 @@ export default class CircularProgressBar extends React.Component {
     if (!nrqlQueryPropsAvailable) {
       return <EmptyState />;
     }
+    const {
+      timeframe = "4 hours",
+      requestedUrl,
+      strategy = "desktop",
+    } = nrqlQueries[0];
+    console.log({ timeframe, requestedUrl, strategy, nrqlQueries });
     return (
       <AutoSizer>
         {({ width, height }) => (
@@ -263,7 +280,7 @@ export default class CircularProgressBar extends React.Component {
                   if (!data.length) {
                     return <NoDataState />;
                   }
-                  console.log({ data });
+                  // console.log({ data });
                   if (!this.nrqlInputIsValid(data)) {
                     return (
                       <NrqlQueryError
@@ -278,98 +295,140 @@ export default class CircularProgressBar extends React.Component {
                       />
                     );
                   }
-                  const { requestedUrl } = data[0].data[0];
-                  console.log(data[0]);
+                  // const { requestedUrl } = data[0].data[0];
+
+                  // console.log(data[0]);
                   const filteredAttributes = this.formatData(data);
+                  const performanceScore = parseScoreFromNrqlResult(data);
+                  // console.log({ performanceScore });
+
+                  // return <div>Hello</div>;
                   this.checkWeights(filteredAttributes);
-                  console.log(filteredAttributes);
-                  const { percent, color, label, series } =
-                    this.calculateTotalScore(filteredAttributes);
-                  console.log(height);
+                  // console.log(filteredAttributes);
+                  const performanceColor = getMainColor(performanceScore);
+                  // console.log({ performanceColor });
+                  const performanceSeries = [
+                    {
+                      x: "progress",
+                      y: performanceScore,
+                      color: performanceColor,
+                    },
+                    {
+                      x: "remainder",
+                      y: 100 - performanceScore,
+                      color: "transparent",
+                    },
+                  ];
+                  let TEST_QUERIES;
+                  if (requestedUrl) {
+                    TEST_QUERIES = [
+                      {
+                        title: "Performance",
+                        query: `FROM lighthousePerformance SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${strategy || 'desktop'}' SINCE ${timeframe} ago`,
+                      },
+                      {
+                        title: "Best practices",
+                        query: `FROM lighthouseBestPractices SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${strategy || 'desktop'}' SINCE ${timeframe} ago`,
+                      },
+                      {
+                        title: "SEO",
+                        query: `FROM lighthouseSeo SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${strategy || 'desktop'}' SINCE ${timeframe} ago`,
+                      },
+                      {
+                        title: "PWA",
+                        query: `FROM lighthousePwa SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${strategy || 'desktop'}' SINCE ${timeframe} ago`,
+                      },
+                      {
+                        title: "Accessibility",
+                        query: `FROM lighthouseAccessibility SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${strategy || 'desktop'}' SINCE ${timeframe} ago`,
+                      },
+                    ];
+                  }
+                  // const { percent, color, label, series } =
+                  //   this.calculateTotalScore(filteredAttributes);
+                  // console.log(height);
                   return (
                     <>
-                      {requestedUrl}
-                      <Grid>
-                        {showOverallScore && (
-                          <GridItem className="svg-container" columnSpan={3}>
-                            <svg
-                              viewBox={`0 0 325 325`}
-                              preserveAspectRatio="xMinYMin meet"
-                              class="svg-content"
-                            >
-                              <circle
-                                cx="160"
-                                cy="160"
-                                r="160"
-                                fill={color}
-                                fill-opacity="0.1"
-                              />
-                              <VictoryPie
-                                standalone={false}
-                                animate={{ duration: 5000 }}
-                                data={series}
-                                width={CHART_WIDTH}
-                                height={CHART_HEIGHT}
-                                innerRadius={160}
-                                cornerRadius={3}
-                                labels={() => null}
-                                style={{
-                                  data: { fill: ({ datum }) => datum.color },
-                                  parent: { backgroundColor: "red" },
+                      {/* {requestedUrl} */}
+                      {TEST_QUERIES && TEST_QUERIES.map(({ title, query }) => (
+                            <div style={{ width: "250px" }}>
+                              <NrqlQuery
+                                query={query}
+                                accountId={parseInt(nrqlQueries[0].accountId)}
+                                pollInterval={NrqlQuery.AUTO_POLL_INTERVAL}
+                                timeRange={timeRange}
+                              >
+                                {({ data, loading, error }) => {
+                                  if (loading) {
+                                    return <Spinner />;
+                                  }
+                                  console.log({query})
+                                  if (error && data === null) {
+                                    return (
+                                      <NrqlQueryError
+                                        title="NRQL Syntax Error"
+                                        description={error.message}
+                                      />
+                                    );
+                                  }
+
+                                  if (!data.length) {
+                                    return <NoDataState />;
+                                  }
+                                  console.log({data})
+                                  const categoryScore = parseScoreFromNrqlResult(data);
+                                  console.log({categoryScore})
+                                  // return (<div>Hello</div>)
+                                  // const resultData = data[0].data[0];
+                                  // const { title } = resultData;
+                                  // let score = resultData.score * 100;
+                                  // console.log({ score });
+                                  const color = getMainColor(categoryScore);
+                                  console.log({ color });
+                                  const series = [
+                                    { x: "progress", y: categoryScore, color },
+                                    {
+                                      x: "remainder",
+                                      y: 100 - categoryScore,
+                                      color: "transparent",
+                                    },
+                                  ];
+                                  return (
+                                    <Stack
+                                      directionType={
+                                        Stack.DIRECTION_TYPE.VERTICAL
+                                      }
+                                      style={{
+                                        textAlign: "center",
+                                        width: "100%",
+                                        alignItems: "center",
+                                        paddingTop: "15px",
+                                      }}
+                                    >
+                                      <StackItem style={{ width: "200px" }}>
+                                        <ScoreVisualization
+                                          score={categoryScore}
+                                          color={color}
+                                          series={series}
+                                        />
+                                      </StackItem>
+                                      <StackItem>
+                                        <HeadingText
+                                          type={HeadingText.TYPE.HEADING_1}
+                                          spacingType={[
+                                            HeadingText.SPACING_TYPE.MEDIUM,
+                                          ]}
+                                        >
+                                          {title} Score
+                                        </HeadingText>
+                                      </StackItem>
+                                    </Stack>
+                                  );
                                 }}
-                              />
-                              <VictoryAnimation duration={5000} data={percent}>
-                                {(percent) => (
-                                  <VictoryLabel
-                                    textAnchor="middle"
-                                    verticalAnchor="middle"
-                                    x={CHART_WIDTH / 2}
-                                    y={CHART_HEIGHT / 2}
-                                    text={`${Math.round(percent)}`}
-                                    style={{ ...baseLabelStyles, fontSize: 45 }}
-                                  />
-                                )}
-                              </VictoryAnimation>
-                            </svg>
-                            <Stack
-                              horizontalType={Stack.HORIZONTAL_TYPE.FILL_EVENLY}
-                              style={{ width: "100%", textAlign: "center" }}
-                            >
-                              <StackItem>
-                                <HeadingText
-                                  type={HeadingText.TYPE.HEADING_2}
-                                  spacingType={[HeadingText.SPACING_TYPE.LARGE]}
-                                >
-                                  {label}
-                                </HeadingText>
-                              </StackItem>
-                            </Stack>
-                            <Stack
-                              horizontalType={Stack.HORIZONTAL_TYPE.CENTER}
-                              style={{
-                                width: "100%",
-                                textAlign: "center",
-                                padding: "10px",
-                              }}
-                            >
-                              <StackItem>
-                                <Badge type={Badge.TYPE.CRITICAL}>{`0-${
-                                  mainThresholds.moderate - 1
-                                }`}</Badge>
-                              </StackItem>
-                              <StackItem>
-                                <Badge type={Badge.TYPE.WARNING}>{`${
-                                  mainThresholds.moderate
-                                }-${mainThresholds.good - 1}`}</Badge>
-                              </StackItem>
-                              <StackItem>
-                                <Badge
-                                  type={Badge.TYPE.SUCCESS}
-                                >{`${mainThresholds.good}-100`}</Badge>
-                              </StackItem>
-                            </Stack>
-                          </GridItem>
-                        )}
+                              </NrqlQuery>
+                            </div>
+                          ))}
+                      <Grid>
                         {showCoreScores && (
                           <GridItem
                             columnSpan={9}
@@ -520,6 +579,35 @@ export default class CircularProgressBar extends React.Component {
                       </Grid>
                       {showCategoryScores && (
                         <div style={{ display: "flex", flexWrap: "wrap" }}>
+                          <div style={{ width: "250px" }}>
+                            <Stack
+                              directionType={Stack.DIRECTION_TYPE.VERTICAL}
+                              style={{
+                                textAlign: "center",
+                                width: "100%",
+                                alignItems: "center",
+                                paddingTop: "15px",
+                              }}
+                            >
+                              <StackItem style={{ width: "200px" }}>
+                                <ScoreVisualization
+                                  score={performanceScore}
+                                  color={performanceColor}
+                                  series={performanceSeries}
+                                />
+                              </StackItem>
+                              <StackItem>
+                                <HeadingText
+                                  type={HeadingText.TYPE.HEADING_1}
+                                  spacingType={[
+                                    HeadingText.SPACING_TYPE.MEDIUM,
+                                  ]}
+                                >
+                                  Performance Score
+                                </HeadingText>
+                              </StackItem>
+                            </Stack>
+                          </div>
                           {SCORE_QUERIES.map(({ title, query }) => (
                             <div style={{ width: "250px" }}>
                               <NrqlQuery
@@ -547,27 +635,16 @@ export default class CircularProgressBar extends React.Component {
                                   }
 
                                   const resultData = data[0].data[0];
-                                  const {
-                                    timestamp,
-                                    id,
-                                    lighthouseVersion,
-                                    customEventSource,
-                                    requestedUrl,
-                                    finalUrl,
-                                    locale,
-                                    score,
-                                    title,
-                                    userAgent,
-                                    x,
-                                  } = resultData;
+                                  const { title } = resultData;
+                                  let score = resultData.score * 100;
                                   console.log({ score });
-                                  const color = getMainColor(score * 100);
+                                  const color = getMainColor(score);
                                   console.log({ color });
                                   const series = [
-                                    { x: "progress", y: score * 100, color },
+                                    { x: "progress", y: score, color },
                                     {
                                       x: "remainder",
-                                      y: 100 - score * 100,
+                                      y: 100 - score,
                                       color: "transparent",
                                     },
                                   ];

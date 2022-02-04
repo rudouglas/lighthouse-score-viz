@@ -37,7 +37,6 @@ export default class DetailsTable extends React.Component {
       return heading.key;
     });
     if (items.every((item) => item.subItems && !item.subItems.source && !item.node?.selector)) {
-      console.log("SubItems Source Table");
       return <SubItemTable details={this.props.details} />;
     }
     console.log({ items, headings });

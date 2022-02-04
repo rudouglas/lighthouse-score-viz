@@ -34,6 +34,7 @@ export default class LighthouseSeoVisualization extends React.Component {
   static propTypes = {
     showPassed: PropTypes.Boolean,
     showManual: PropTypes.Boolean,
+    showNull: PropTypes.Boolean,
     showNotApplicable: PropTypes.Boolean,
     /**
      * An array of objects consisting of a nrql `query` and `accountId`.
@@ -55,7 +56,7 @@ export default class LighthouseSeoVisualization extends React.Component {
    */
 
   transformData = (rawData) => {
-    // console.log({ rawData });
+    const { showNull } = this.props;
     const auditRefObject = convertAuditRef(rawData);
     console.log({ auditRefObject });
     const allOpportunities = auditRefObject.filter(
@@ -64,6 +65,18 @@ export default class LighthouseSeoVisualization extends React.Component {
     const opportunities = allOpportunities.filter(
       (opp) => opp.score > 0 && opp.score < mainThresholds.good / 100
     );
+    const diagnostics = auditRefObject.filter((audit) =>
+      showNull
+        ? !audit.score ||
+          (audit.details &&
+            audit.details.type !== "opportunity" &&
+            audit.score < mainThresholds.good / 100)
+        : audit.score !== null &&
+          audit.details &&
+          audit.details.type !== "opportunity" &&
+          audit.score < mainThresholds.good / 100
+    );
+    console.log({ diagnostics });
     const contentGroup = auditRefObject.filter(
       (audit) =>
         audit.group === "seo-content" &&
@@ -82,6 +95,9 @@ export default class LighthouseSeoVisualization extends React.Component {
         audit.score !== null &&
         audit.score < mainThresholds.good / 100
     );
+    const groups1 = [...new Set(diagnostics.map((audit) => audit.group))];
+    const groups2 = [...new Set(auditRefObject.map((audit) => audit.group))];
+    console.log({ groups1, groups2 });
     const passed = auditRefObject.filter(
       (audit) => audit.score && audit.score >= mainThresholds.good / 100
     );
@@ -195,7 +211,7 @@ export default class LighthouseSeoVisualization extends React.Component {
                         SEO
                       </HeadingText>
                       <BlockText
-                        style={{ fontSize: "12px" }}
+                        style={{ fontSize: "1.4em", lineHeight: "2em" }}
                         spacingType={[BlockText.SPACING_TYPE.MEDIUM]}
                       >
                         These checks ensure that your page is following basic
@@ -276,7 +292,7 @@ const EmptyState = () => (
         An example NRQL query you can try is:
       </HeadingText>
       <code>
-        FROM lighthousePerformance SELECT * WHERE requestedUrl =
+        FROM lighthouseSeo SELECT * WHERE requestedUrl =
         'https://developer.newrelic.com/' LIMIT 1
       </code>
     </CardBody>

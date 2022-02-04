@@ -36,6 +36,12 @@
             "type": "boolean"
         },
         {
+            "name": "showNull",
+            "title": "Show Null Scored",
+            "description": "Whether to display checks that weren't scored",
+            "type": "boolean"
+        },
+        {
             "name": "showNotApplicable",
             "title": "Show Not Applicable",
             "description": "Whether to display checks that are not applicable",
