@@ -57,7 +57,7 @@ export default class BuildScriptModal extends React.Component {
       ],
       url: "",
       monitorName:
-        "LighthouseScore - https://www.example.com (Desktop - Location)",
+        "LighthouseScores - https://www.example.com (Desktop)",
       nrLicenseKey: "",
       pageSpeedApiKey: "",
       isValid: true,
@@ -80,7 +80,7 @@ export default class BuildScriptModal extends React.Component {
 
     this.setState({
       strategy: value,
-      monitorName: `Lighthouse(Score) - ${url} (${value} - Location)`,
+      monitorName: `LighthouseScores - ${url} (${value})`,
     });
   };
 
@@ -89,9 +89,9 @@ export default class BuildScriptModal extends React.Component {
     const { strategy } = this.state;
     this.setState({
       url: value,
-      monitorName: `Lighthouse(Score) - ${value} (${strategy
+      monitorName: `LighthouseScores - ${value} (${strategy
         .charAt(0)
-        .toUpperCase()}${strategy.slice(1)} - Location)`,
+        .toUpperCase()}${strategy.slice(1)})`,
     });
   };
 

@@ -44,7 +44,7 @@ export default class CreateScriptModal extends React.Component {
     console.log({ value });
     this.setState({
       strategy: value,
-      monitorName: `Lighthouse(Score) - ${url} (${value})`,
+      monitorName: `LighthouseScores - ${url} (${value})`,
     });
   };
 

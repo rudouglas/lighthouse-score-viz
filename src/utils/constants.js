@@ -124,7 +124,6 @@ categories.forEach((cat) => {
           headers: headers,
           body: JSON.stringify({
             ...coreAttributes,
-            syntheticLocation,
             deviceType: settings.strategy,
             userAgent,
             stackPacks,
