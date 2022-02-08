@@ -1,7 +1,7 @@
 {
     "schemaType": "VISUALIZATION",
-    "id": "lighthouse-pwa",
-    "displayName": "LighthousePwa",
+    "id": "lighthouse-pwa-audits",
+    "displayName": "Lighthouse PWA audits",
     "description": "",
     "configuration": [
         {

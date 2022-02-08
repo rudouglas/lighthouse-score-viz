@@ -1,7 +1,7 @@
 {
     "schemaType": "VISUALIZATION",
-    "id": "lighthouse-best-practices",
-    "displayName": "LighthouseBestPractices",
+    "id": "lighthouse-best-practices-audits",
+    "displayName": "Lighthouse best practices audits",
     "description": "",
     "configuration": [
         {

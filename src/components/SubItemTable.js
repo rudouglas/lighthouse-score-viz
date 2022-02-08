@@ -35,7 +35,7 @@ export default class SubItemTable extends React.Component {
       return heading.key;
     });
     const transformedItems = [];
-
+    // console.log({ items, headings });
     items.forEach((item) => {
       const mainKey = Object.keys(item).reduce((acc, key) => {
         if (key === "entity") {
@@ -67,7 +67,7 @@ export default class SubItemTable extends React.Component {
         transformedItems.push(subKey);
       });
     });
-    // console.log({ items, headings, transformedItems });
+    console.log({ items, headings, transformedItems });
     return (
       <Table items={transformedItems} multivalue>
         <TableHeader>
@@ -205,6 +205,9 @@ export default class SubItemTable extends React.Component {
                     </TableRowCell>
                   );
                 }
+              } else if (key === 'product') {
+                console.log({ item })
+                return (<TableRowCell>{item[key] || ` - ${item.url}`}</TableRowCell>)
               }
               if (key === "signal") {
                 return <TableRowCell>{item[key]}</TableRowCell>;

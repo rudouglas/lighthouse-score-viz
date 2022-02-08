@@ -11,7 +11,7 @@ import {
   Grid,
   GridItem,
   platform,
-  nerdlet,
+  Link,
   navigation,
   Stack,
   StackItem,
@@ -49,18 +49,16 @@ export default class BuildScriptModal extends React.Component {
       freqValue: "15",
       strategy: "desktop",
       selectedAudits: [
-        "score",
         "performance",
         "accessibility",
         "best-practices",
         "pwa",
         "seo",
       ],
-      selectedLocation: "Portland, OR, USA",
       url: "",
       monitorName:
         "LighthouseScore - https://www.example.com (Desktop - Location)",
-      userApiKey: "",
+      nrLicenseKey: "",
       pageSpeedApiKey: "",
       isValid: true,
       urlStatus: 0,
@@ -70,30 +68,23 @@ export default class BuildScriptModal extends React.Component {
   }
 
   _onClose = () => {
-    console.log("openModal");
     this.setState({
       hidden: true,
     });
   };
   _onSelectAudits = (evt, value) => {
-    console.log(value);
     this.setState({ selectedAudits: value });
   };
   _onSelectStrategy = (evt, value) => {
     const { url } = this.state;
-    console.log({ value });
+
     this.setState({
       strategy: value,
       monitorName: `Lighthouse(Score) - ${url} (${value} - Location)`,
     });
   };
 
-  _changeFreq = (evt, value) => {
-    console.log({ value });
-    this.setState({ freqValue: value });
-  };
   _setUrl = (evt) => {
-    console.log(evt.target.value);
     const { value } = evt.target;
     const { strategy } = this.state;
     this.setState({
@@ -103,54 +94,48 @@ export default class BuildScriptModal extends React.Component {
         .toUpperCase()}${strategy.slice(1)} - Location)`,
     });
   };
+
   _onSelectLocation = (evt, value) => {
-    console.log({ evt, value });
     this.setState({ selectedLocation: value });
   };
+
   _setMonitorName = (evt) => {
-    console.log(evt.target.value);
     const { value } = evt.target;
     this.setState({
       monitorName: value,
     });
   };
+
   _setAccountId = (evt, value) => {
-    console.log(value);
     this.setState({
       accountId: value,
     });
   };
+
   _setPageSpeedApiKey = (evt) => {
-    console.log(evt.target.value);
     const { value } = evt.target;
     this.setState({
       pageSpeedApiKey: value,
     });
   };
-  _setUserApiKey = (evt) => {
-    console.log(evt.target.value);
+
+  _setNrLicenseKey = (evt) => {
     const { value } = evt.target;
     this.setState({
-      userApiKey: value,
+      nrLicenseKey: value,
     });
   };
+
   _buildScript = async () => {
     const { hostname } = window.location;
     this.setState({ scriptLoading: true });
-    const {
-      selectedLocation,
-      selectedAudits,
-      url,
-      strategy,
-      userApiKey,
-      pageSpeedApiKey,
-    } = this.state;
+    const { selectedAudits, url, strategy, nrLicenseKey, pageSpeedApiKey } =
+      this.state;
     const { accountId } = this.props;
     let isValid =
       Object.values({
-        selectedLocation,
         url,
-        userApiKey,
+        nrLicenseKey,
         accountId,
         pageSpeedApiKey,
         accountId,
@@ -162,7 +147,7 @@ export default class BuildScriptModal extends React.Component {
           method: "GET",
         });
         this.setState({ urlStatus: res.status });
-        console.log({ res });
+
         if (res.status >= 400) {
           isValid = false;
           this.setState({ isValid: false });
@@ -177,10 +162,9 @@ export default class BuildScriptModal extends React.Component {
     }
 
     if (!isValid) {
-      console.log("invalid");
       return this.setState({ isValid });
     }
-    console.log("continuing");
+
     const staging =
       hostname.includes("staging") || !hostname.includes("newrelic.com")
         ? "staging-"
@@ -194,7 +178,7 @@ export default class BuildScriptModal extends React.Component {
 const url = "${url}";
 const strategy = '${strategy}';
 const USER_API_KEY = ${
-      userApiKey.startsWith("$secure") ? userApiKey : `'${userApiKey}'`
+      nrLicenseKey.startsWith("$secure") ? nrLicenseKey : `'${nrLicenseKey}'`
     };
 const PAGE_SPEED_KEY = ${
       pageSpeedApiKey.startsWith("$secure")
@@ -203,20 +187,19 @@ const PAGE_SPEED_KEY = ${
     };
 const ACCOUNT_ID = '${accountId}';
 const EVENT_URL = '${event_url}';
-const syntheticLocation = '${selectedLocation}';
       ${scoreScript}
     `;
 
     this.setState({ code: newScript, showScript: true, scriptLoading: false });
   };
+
   render() {
     const {
       strategy,
       selectedAudits,
-      selectedLocation,
       url,
       monitorName,
-      userApiKey,
+      nrLicenseKey,
       pageSpeedApiKey,
       isValid,
       urlStatus,
@@ -225,7 +208,7 @@ const syntheticLocation = '${selectedLocation}';
       scriptLoading,
     } = this.state;
     const { accountId } = this.props;
-    console.log({ accountId });
+
     return (
       <Card>
         <CardBody>
@@ -283,43 +266,43 @@ const syntheticLocation = '${selectedLocation}';
                       onChange={this._onSelectAudits}
                       required
                     >
-                      <Checkbox disabled label="Overall Score" value="score" />
-                      <Checkbox label="Performance" value="performance" />
+                      <Checkbox
+                        disabled
+                        label="Performance"
+                        value="performance"
+                      />
                       <Checkbox label="Accessibility" value="accessibility" />
                       <Checkbox label="Best Practices" value="best-practices" />
                       <Checkbox label="PWA" value="pwa" />
                       <Checkbox label="SEO" value="seo" />
                     </CheckboxGroup>
-                    <RadioGroup
-                      label="Select location"
-                      value={selectedLocation}
-                      onChange={this._onSelectLocation}
-                    >
-                      <Radio
-                        label="Portland, OR, USA"
-                        value="Portland, OR, USA"
-                      />
-                      <Radio
-                        label="Washington, DC, USA"
-                        value="Washington, DC, USA"
-                      />
-                      <Radio label="Hong Kong, HK" value="Hong Kong, HK" />
-                      <Radio
-                        label="London, England, UK"
-                        value="London, England, UK"
-                      />
-                    </RadioGroup>
-                    <TextField
-                      label="User API Key"
-                      placeholder="NRAK-XXX or $secure.USER_API_KEY"
-                      value={userApiKey}
-                      invalid={
-                        !isValid && !userApiKey && "Please enter a user API key"
+                    <Link
+                      onClick={() =>
+                        navigation.openLauncher({
+                          id: "api-keys-ui.home",
+                        })
                       }
+                      target="_blank"
+                    >
+                      Get License Key
+                    </Link>
+                    <TextField
+                      label="New Relic License Key"
+                      placeholder="NRAK-XXX or $secure.LICENSE_KEY"
+                      value={nrLicenseKey}
+                      invalid={
+                        !isValid &&
+                        !nrLicenseKey &&
+                        "Please enter a New Relic License Key"
+                      }
+                      info="This is for the account you want the Events to report to"
                       style={{ width: "100%" }}
-                      onChange={this._setUserApiKey}
+                      onChange={this._setNrLicenseKey}
                       required
                     />
+                    <Link to="https://developers.google.com/speed/docs/insights/v5/get-started#APIKey">
+                      Generate PageSpeed API Key
+                    </Link>
                     <TextField
                       label="PageSpeed API Key"
                       placeholder="XXX or $secure.PAGESPEED_API_KEY"
@@ -333,6 +316,7 @@ const syntheticLocation = '${selectedLocation}';
                       onChange={this._setPageSpeedApiKey}
                       required
                     />
+
                     <TextField
                       label="Suggested monitor name"
                       placeholder="XXX or $secure.PAGESPEED_API_KEY"
@@ -345,7 +329,6 @@ const syntheticLocation = '${selectedLocation}';
                 <GridItem columnSpan={1}>
                   <Card>
                     <CardBody>
-                      {" "}
                       <Button
                         iconType={
                           Button.ICON_TYPE
@@ -380,7 +363,7 @@ const syntheticLocation = '${selectedLocation}';
                         <Editor
                           className="language-javascript"
                           value={code}
-                          onValueChange={(code) => console.log({ code })}
+                          onValueChange={(code) => this.setState({ code })}
                           highlight={(code) => highlight(code, languages.js)}
                           padding={10}
                           style={{

@@ -1,7 +1,7 @@
 {
     "schemaType": "VISUALIZATION",
-    "id": "lighthouse-accessibility",
-    "displayName": "LighthouseAccessibility",
+    "id": "lighthouse-accessibility-audits",
+    "displayName": "Lighthouse accessibility audits",
     "description": "",
     "configuration": [
         {

@@ -5,33 +5,14 @@ import {
   HeadingText,
   Stack,
   StackItem,
-  AutoSizer,
-  PlatformStateContext,
-  CardHeader,
-  Grid,
-  GridItem,
-  platform,
-  nerdlet,
   navigation,
   InlineMessage,
-  TableHeader,
-  TableRow,
-  TableRowCell,
-  TableHeaderCell,
-  ngql,
   Button,
   CardSection,
   AccountPicker,
 } from "nr1";
 import OverviewTable from "./components/OverviewTable";
 import Lighthouse from "../../src/components/Lighthouse";
-import { scoreScript } from "../../src/utils/constants";
-import { getMainColor } from "../../utils/helpers";
-import Editor from "react-simple-code-editor";
-import { highlight, languages } from "prismjs/components/prism-core";
-import "prismjs/components/prism-clike";
-import "prismjs/components/prism-javascript";
-import CodeEditor from "@uiw/react-textarea-code-editor";
 
 export default class LighthouseScoreNerdlet extends React.Component {
   constructor() {
@@ -76,7 +57,7 @@ export default class LighthouseScoreNerdlet extends React.Component {
                 spacingType={[HeadingText.SPACING_TYPE.LARGE]}
                 type={HeadingText.TYPE.HEADING_2}
               >
-                Lighthouse Score
+                Lighthouse Scores
               </HeadingText>
             </StackItem>
             <StackItem style={{ padding: "10px" }}>

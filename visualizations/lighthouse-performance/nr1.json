@@ -1,7 +1,7 @@
 {
     "schemaType": "VISUALIZATION",
-    "id": "lighthouse-performance",
-    "displayName": "LighthousePerformance",
+    "id": "lighthouse-performance-audits",
+    "displayName": "Lighthouse performance audits",
     "description": "",
     "configuration": [
         {
