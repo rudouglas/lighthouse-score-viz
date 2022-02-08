@@ -44,6 +44,7 @@ export default class Accordion extends React.Component {
       numericValue,
       numericUnit,
       displayValue,
+      explanation,
     } = this.props;
 
     const color = score !== null ? getMainColor(score * 100) : "grey";
@@ -68,7 +69,7 @@ export default class Accordion extends React.Component {
                       __html: formatTitle,
                     }}
                   />{" "}
-                  <DisplayValue color={color} displayValue={displayValue} />
+                  <DisplayValue color={color} displayValue={displayValue} explanation={explanation} />
                 </HeadingText>
               </GridItem>
               <GridItem columnSpan={2}>

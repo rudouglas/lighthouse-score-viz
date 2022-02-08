@@ -26,10 +26,10 @@ export default class DetailsTable extends React.Component {
   }
 
   render() {
-    const { displayValue, color } = this.props;
-    
+    const { displayValue, explanation, color } = this.props;
+
     return (
-      <span style={{color}}>{displayValue && ` - ${displayValue}`}</span>
-    )
+      <span style={{ color }}>{displayValue && ` - ${displayValue}` || explanation && ` - ${explanation}`}</span>
+    );
   }
 }

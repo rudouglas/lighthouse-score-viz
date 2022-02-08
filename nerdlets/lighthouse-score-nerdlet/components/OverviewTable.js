@@ -8,11 +8,14 @@ import {
   TableHeaderCell,
   ngql,
   NerdGraphQuery,
-  HeadingText,
-  Spinner
+  Icon,
+  Spinner,
+  Tooltip,
 } from "nr1";
 import { getMainColor } from "../../../utils/helpers";
 import TableEmptyState from "./TableEmptyState";
+import ErrorState from "../../../src/error-state";
+
 export default class OverviewTable extends React.Component {
   constructor() {
     super(...arguments);
@@ -20,11 +23,14 @@ export default class OverviewTable extends React.Component {
     this.state = {
       accountId: "",
       items: null,
+      nrqlError: null,
     };
   }
+
   componentDidMount = async () => {
     await this._getItems();
   };
+
   componentDidUpdate = async (prevProps, prevState) => {
     const { accountId } = this.props;
     if (prevProps.accountId === accountId) {
@@ -32,6 +38,7 @@ export default class OverviewTable extends React.Component {
     }
     await this._getItems();
   };
+
   _getItems = async () => {
     const { accountId } = this.props;
     if (!accountId) {
@@ -49,7 +56,7 @@ export default class OverviewTable extends React.Component {
         const query = ngql`query($id: Int!) {
             actor {
               account(id: $id) {
-              nrql(query: "SELECT average(score) FROM ${eventType} FACET requestedUrl, syntheticLocation SINCE 2 days ago") {
+              nrql(query: "SELECT average(score) FROM ${eventType} FACET requestedUrl, strategy SINCE 2 days ago") {
                 nrql
                 results
               }
@@ -63,6 +70,7 @@ export default class OverviewTable extends React.Component {
         });
         if (error) {
           console.error(error);
+          this.setState({ nrqlError: error });
           return;
         }
         const {
@@ -72,35 +80,37 @@ export default class OverviewTable extends React.Component {
             },
           },
         } = data;
-        console.log({ [eventType]: results });
+
         return { eventType, data: results };
       })
     );
 
-    const items = this._formatResults(allResults);
-    console.log({ items });
+    const items = this._formatResults(allResults).sort((a, b) =>
+      a.requestedUrl.localeCompare(b.requestedUrl)
+    );
+
     this.setState({ items });
   };
 
   _formatResults = (results) => {
-    const requestedUrls = results.flatMap((result) => {
-      return result.data.map((item) => {
-        const { facet } = item;
-        return [facet[0], facet[1]];
-      });
-    }).filter(a=>!(2-(this[a]=++this[a]|0)));
+    const requestedUrls = results
+      .flatMap((result) => {
+        return result.data.map((item) => {
+          const { facet } = item;
+          return [facet[0], facet[1]];
+        });
+      })
+      .filter((a) => !(2 - (this[a] = ++this[a] | 0)));
 
-    console.log({ requestedUrls, results });
-    const items = requestedUrls.map(([requestedUrl, syntheticLocation]) => {
+    const items = requestedUrls.map(([requestedUrl, strategy]) => {
       return results.reduce((acc, result) => {
         const averageScore = result.data.find(
           (datum) =>
-            datum.facet[0] === requestedUrl &&
-            datum.facet[1] === syntheticLocation
+            datum.facet[0] === requestedUrl && datum.facet[1] === strategy
         )["average.score"];
         return {
           requestedUrl,
-          syntheticLocation,
+          strategy,
           ...acc,
           [`${result.eventType}Score`]: averageScore,
         };
@@ -110,23 +120,24 @@ export default class OverviewTable extends React.Component {
   };
 
   render() {
-    const { items } = this.state;
-    console.log({ items });
-    return (
-      items ? (
-        items.length > 0 ? <Table items={items} style={{ fontSize: "2em" }}>
+    const { items, nrqlError } = this.state;
+
+    if (nrqlError) {
+      return <ErrorState error={nrqlError} />;
+    }
+
+    return items ? (
+      items.length > 0 ? (
+        <Table items={items} style={{ fontSize: "2em" }}>
           <TableHeader>
             <TableHeaderCell
               value={({ item }) => item.requestedUrl}
-              width="20%"
+              width="30%"
             >
               Requested URL
             </TableHeaderCell>
-            <TableHeaderCell
-              value={({ item }) => item.syntheticLocation}
-              width="20%"
-            >
-              Location
+            <TableHeaderCell value={({ item }) => item.strategy} width="10%">
+              Device
             </TableHeaderCell>
             <TableHeaderCell
               value={({ item }) => item.lighthousePerformanceScore}
@@ -154,7 +165,21 @@ export default class OverviewTable extends React.Component {
           {({ item }) => (
             <TableRow>
               <TableRowCell>{item.requestedUrl}</TableRowCell>
-              <TableRowCell>{item.syntheticLocation}</TableRowCell>
+              <TableRowCell>
+                {item.strategy === "mobile" ? (
+                  <Tooltip text="Mobile">
+                    <Icon
+                      type={Icon.TYPE.HARDWARE_AND_SOFTWARE__HARDWARE__MOBILE}
+                    />
+                  </Tooltip>
+                ) : (
+                  <Tooltip text="Desktop">
+                    <Icon
+                      type={Icon.TYPE.HARDWARE_AND_SOFTWARE__HARDWARE__DESKTOP}
+                    />
+                  </Tooltip>
+                )}
+              </TableRowCell>
               <TableRowCell
                 style={{
                   backgroundColor: getMainColor(
@@ -203,9 +228,12 @@ export default class OverviewTable extends React.Component {
               </TableRowCell>
             </TableRow>
           )}
-        </Table> : <TableEmptyState />
-      ) : <Spinner type={Spinner.TYPE.DOT} />
-
+        </Table>
+      ) : (
+        <TableEmptyState />
+      )
+    ) : (
+      <Spinner type={Spinner.TYPE.DOT} />
     );
   }
 }

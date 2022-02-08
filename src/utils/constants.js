@@ -34,17 +34,14 @@ const createEvent = (object, refs, audits) => {
   delete newEventObject.auditRefs;
   const auditRefs = refs.map((ref) => {
     const audit = audits.find((audit) => audit.id === ref.id);
-    return {...audit, weight: ref.weight, group: ref.group};
+    return { ...audit, weight: ref.weight, group: ref.group };
   });
 
   const stringifiedRefs = JSON.stringify(auditRefs);
   if (stringifiedRefs.length > MAX_LENGTH) {
     const splitData = chunkString(stringifiedRefs, MAX_LENGTH);
-    // console.log(splitData);
     splitData.forEach((data, index) => {
-      // console.log(\`\${ref.id}.\${key}_\${index}\`)
       newEventObject[\`auditRefs_\${index}\`] = data;
-      // console.log(newEventObject[\`\${ref.id}.\${key}_\${index}\`])
     });
   } else {
     newEventObject[\`auditRefs\`] = stringifiedRefs;
@@ -55,7 +52,7 @@ const createEvent = (object, refs, audits) => {
 categories.forEach((cat) => {
   const settings = {
     url,
-    category: cat === "score" ? "performance" : cat,
+    category: cat,
     strategy,
   };
   const options = {
@@ -72,139 +69,73 @@ categories.forEach((cat) => {
           lighthouseResult: {
             categories: lightouseCategories,
             audits,
-            timing,
+            timing: { total: totalTiming },
             userAgent,
             stackPacks,
             lighthouseVersion,
             requestedUrl,
             runWarnings,
-            configSettings,
+            configSettings: { locale },
             categoryGroups,
             i18n,
+            finalUrl,
           },
         } = body;
-        console.log(cat);
+
         var lighthouseMetrics = audits.metrics
           ? audits.metrics.details.items[0]
           : {};
-        console.log({ lighthouseMetrics });
         let coreAttributes;
 
-        switch (cat) {
-          case "score":
+        for (var attributeName in lighthouseMetrics) {
+          if (
+            lighthouseMetrics.hasOwnProperty(attributeName) &&
+            !attributeName.includes("Ts")
+          ) {
             coreAttributes = {
-              eventType: "lighthouseScores",
-              performanceScore: lightouseCategories.performance.score,
+              ...coreAttributes,
+              [attributeName]: lighthouseMetrics[attributeName],
             };
-            for (var attributeName in lighthouseMetrics) {
-              if (
-                lighthouseMetrics.hasOwnProperty(attributeName) &&
-                !attributeName.includes("Ts")
-              ) {
-                coreAttributes = {
-                  ...coreAttributes,
-                  [attributeName]: lighthouseMetrics[attributeName],
-                };
-              }
-            }
-            break;
-          case "performance":
-            const performanceAudits = Object.keys(audits).map((key) => {
-              return audits[key];
-            });
-            const perfAuditCategories = Object.keys(lightouseCategories).map(
-              (key) => lightouseCategories[key]
-            );
-            const performance = perfAuditCategories.find(
-              (category) => category.id === "performance"
-            );
-            const performanceRefs = performance.auditRefs;
-
-            coreAttributes = createEvent(
-              performance,
-              performanceRefs,
-              performanceAudits
-            );
-            break;
-          case "best-practices":
-            const bestPracticeAudits = Object.keys(audits).map((key) => {
-              return audits[key];
-            });
-            const bPAuditCategories = Object.keys(lightouseCategories).map(
-              (key) => lightouseCategories[key]
-            );
-            const bestpractices = bPAuditCategories.find(
-              (category) => category.id === "best-practices"
-            );
-            const bestpracticesRefs = bestpractices.auditRefs;
-            coreAttributes = createEvent(
-              bestpractices,
-              bestpracticesRefs,
-              bestPracticeAudits
-            );
-            break;
-          case "seo":
-            const seoAudits = Object.keys(audits).map((key) => {
-              return audits[key];
-            });
-            const seoAuditCategories = Object.keys(lightouseCategories).map(
-              (key) => lightouseCategories[key]
-            );
-            const seo = seoAuditCategories.find(
-              (category) => category.id === "seo"
-            );
-            const seoRefs = seo.auditRefs;
-            coreAttributes = createEvent(seo, seoRefs, seoAudits);
-            break;
-          case "pwa":
-            const pwaAudits = Object.keys(audits).map((key) => {
-              return audits[key];
-            });
-            const pwaCategories = Object.keys(lightouseCategories).map(
-              (key) => lightouseCategories[key]
-            );
-            const pwa = pwaCategories.find((category) => category.id === "pwa");
-            const pwaRefs = pwa.auditRefs;
-            coreAttributes = createEvent(pwa, pwaRefs, pwaAudits);
-            break;
-          case "accessibility":
-            const accessibilityAudits = Object.keys(audits).map((key) => {
-              return audits[key];
-            });
-            const accessibilityAuditCategories = Object.keys(
-              lightouseCategories
-            ).map((key) => lightouseCategories[key]);
-            const accessibility = accessibilityAuditCategories.find(
-              (category) => category.id === "accessibility"
-            );
-            const accessibilityRefs = accessibility.auditRefs;
-            coreAttributes = createEvent(
-              accessibility,
-              accessibilityRefs,
-              accessibilityAudits
-            );
-            break;
-          default:
-            break;
+          }
         }
 
-        console.log(coreAttributes);
+        const chosenCategoryAudits = Object.keys(audits).map((key) => {
+          return audits[key];
+        });
+        const chosenCategoryAuditCategories = Object.keys(
+          lightouseCategories
+        ).map((key) => lightouseCategories[key]);
+        const chosenCategoryObject = chosenCategoryAuditCategories.find(
+          (category) => category.id === cat
+        );
+        const chosenCategoryRefs = chosenCategoryObject.auditRefs;
+
+        coreAttributes = {
+          ...coreAttributes,
+          ...createEvent(
+            chosenCategoryObject,
+            chosenCategoryRefs,
+            chosenCategoryAudits
+          ),
+        };
+
         request.post({
           url: EVENT_URL,
           headers: headers,
           body: JSON.stringify({
             ...coreAttributes,
-            timing,
-            requestedUrl,
             syntheticLocation,
             deviceType: settings.strategy,
             userAgent,
             stackPacks,
             lighthouseVersion,
-            runWarnings,
-            configSettings,
+            requestedUrl: url,
+            runWarnings: JSON.stringify(runWarnings),
+            locale,
             categoryGroups,
             i18n,
+            finalUrl,
+            totalTiming,
           }),
         });
       } else {

@@ -5,21 +5,15 @@
     "description": "",
     "configuration": [
         {
-            "name": "nrqlQueries",
-            "title": "NRQL Queries",
-            "type": "collection",
+            "name": "nrqlSettings",
+            "title": "NRQL Settings",
+            "type": "namespace",
             "items": [
                 {
                     "name": "accountId",
                     "title": "Account ID",
                     "description": "Account ID to be associated with the query",
                     "type": "account-id"
-                },
-                {
-                    "name": "query",
-                    "title": "Query",
-                    "description": "NRQL query for visualization",
-                    "type": "nrql"
                 },
                 {
                     "name": "requestedUrl",
@@ -78,34 +72,36 @@
             ]
         },
         {
-            "name": "showOverallScore",
-            "title": "Show overall score",
-            "description": "Whether to display the overall score",
-            "type": "boolean"
-        },
-        {
-            "name": "showDescriptions",
-            "title": "Show Descriptions",
-            "description": "Whether to display the description of each attribute",
-            "type": "boolean"
-        },
-        {
-            "name": "showCategoryScores",
-            "title": "Show Category Scores",
-            "description": "Whether to display the individual scores for each category",
-            "type": "boolean"
-        },
-        {
-            "name": "showCoreScores",
-            "title": "Show Core Vital Scores",
-            "description": "Whether to display the Core Vital scores for each attribute",
-            "type": "boolean"
-        },
-        {
-            "name": "showScoreGuide",
-            "title": "Show Score Guide",
-            "description": "Whether to display the score guide for each attribute",
-            "type": "boolean"
+            "name": "uiSettings",
+            "title": "UI Settings",
+            "type": "namespace",
+            "items": [
+                {
+                    "name": "hideCategoryScores",
+                    "title": "Hide Category Scores",
+                    "description": "Whether to display the individual scores for each category",
+                    "type": "boolean"
+                },
+                {
+                    "name": "hideCoreScores",
+                    "title": "Hide Core Vital Scores",
+                    "description": "Whether to display the Core Vital scores for each attribute",
+                    "type": "boolean"
+                },
+                {
+                    "name": "hideScoreGuide",
+                    "title": "Hide Score Guide",
+                    "description": "Whether to display the score guide for each attribute",
+                    "type": "boolean"
+                },
+                {
+                    "name": "hideDescriptions",
+                    "title": "Hide Descriptions",
+                    "description": "Whether to display the description of each attribute",
+                    "type": "boolean"
+                }
+            ]
         }
+        
     ]
 }

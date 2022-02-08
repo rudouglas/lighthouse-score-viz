@@ -15,8 +15,7 @@ const NoDataState = () => (
           className="NoDataState-bodyText"
           type={BlockText.TYPE.NORMAL}
         >
-          Try a different query or increase the time range by adding a{' '}
-          <code>SINCE</code> clause to the end of your query.
+          Make sure you have a Synthetics script generating data for this URL and Device type
         </BlockText>
       </div>
     </CardBody>

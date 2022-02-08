@@ -13,24 +13,18 @@ import {
   platform,
   nerdlet,
   navigation,
-  Table,
+  InlineMessage,
   TableHeader,
   TableRow,
   TableRowCell,
   TableHeaderCell,
   ngql,
   Button,
-  NerdGraphQuery,
-  Select,
-  SelectItem,
-  CheckboxGroup,
-  Checkbox,
-  TextField,
-  Form,
   CardSection,
   AccountPicker,
 } from "nr1";
 import OverviewTable from "./components/OverviewTable";
+import Lighthouse from "../../src/components/Lighthouse";
 import { scoreScript } from "../../src/utils/constants";
 import { getMainColor } from "../../utils/helpers";
 import Editor from "react-simple-code-editor";
@@ -70,7 +64,13 @@ export default class LighthouseScoreNerdlet extends React.Component {
     return (
       <Card>
         <CardBody>
-          <Stack>
+          <Stack style={{ width: "100%", display: "flex" }}>
+            <StackItem>
+              <img
+                src="https://cdn.worldvectorlogo.com/logos/google-lighthouse.svg"
+                width="50px"
+              />
+            </StackItem>
             <StackItem>
               <HeadingText
                 spacingType={[HeadingText.SPACING_TYPE.LARGE]}
@@ -78,6 +78,14 @@ export default class LighthouseScoreNerdlet extends React.Component {
               >
                 Lighthouse Score
               </HeadingText>
+            </StackItem>
+            <StackItem style={{ padding: "10px" }}>
+              <Lighthouse />
+            </StackItem>
+          </Stack>
+          <CardSection />
+          <Stack>
+            <StackItem>
               <AccountPicker
                 spacingType={[AccountPicker.SPACING_TYPE.LARGE]}
                 value={accountId}
@@ -86,25 +94,41 @@ export default class LighthouseScoreNerdlet extends React.Component {
                 required
               />
             </StackItem>
-          </Stack>
-          {accountId && (
-            <Stack style={{ marginLeft: "50px" }}>
-              <StackItem>
-                <HeadingText spacingType={[HeadingText.SPACING_TYPE.LARGE]}>
-                  Build Synthetics Scripts
-                </HeadingText>
+            {accountId && (
+              <>
+                <StackItem>
+                  <StackItem style={{ marginLeft: "10px" }}>
+                    <div
+                      style={{
+                        borderLeft: "6px solid rgb(170 170 170 / 16%)",
+                        height: "100px",
+                      }}
+                    ></div>
+                  </StackItem>
+                </StackItem>
+                <StackItem>
+                  <HeadingText spacingType={[HeadingText.SPACING_TYPE.LARGE]}>
+                    Build Synthetics Scripts
+                  </HeadingText>
 
-                <Button
-                  spacingType={[Button.SPACING_TYPE.LARGE]}
-                  type={Button.TYPE.OUTLINE}
-                  onClick={this._openModal}
-                >
-                  Build script
-                </Button>
-              </StackItem>
-            </Stack>
-          )}
-          <Stack>
+                  <Button
+                    spacingType={[Button.SPACING_TYPE.LARGE]}
+                    type={Button.TYPE.OUTLINE}
+                    onClick={this._openModal}
+                  >
+                    Build script
+                  </Button>
+                </StackItem>
+              </>
+            )}
+            <StackItem style={{ marginLeft: "50px" }}>
+              <div
+                style={{
+                  borderLeft: "6px solid rgb(170 170 170 / 16%)",
+                  height: "100px",
+                }}
+              ></div>
+            </StackItem>
             <StackItem>
               <HeadingText spacingType={[HeadingText.SPACING_TYPE.LARGE]}>
                 Custom Visualizations
@@ -113,7 +137,7 @@ export default class LighthouseScoreNerdlet extends React.Component {
                 spacingType={[Button.SPACING_TYPE.LARGE]}
                 to="https://staging.onenr.io/0mMRNyaD7wn"
               >
-                Score Viz
+                Overall Scores Viz
               </Button>
               <Button
                 spacingType={[Button.SPACING_TYPE.LARGE]}
@@ -149,7 +173,13 @@ export default class LighthouseScoreNerdlet extends React.Component {
           </Stack>
 
           <CardSection />
-          {accountId && <OverviewTable accountId={accountId} />}
+
+          {accountId && (
+            <>
+              <InlineMessage label="Average scores since 2 days ago" />
+              <OverviewTable accountId={accountId} />
+            </>
+          )}
         </CardBody>
       </Card>
     );

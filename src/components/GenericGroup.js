@@ -32,7 +32,7 @@ export default class GenericGroup extends React.Component {
         <HeadingText
           type={HeadingText.TYPE.HEADING_3}
           spacingType={[HeadingText.SPACING_TYPE.LARGE]}
-          style={{ marginTop: "50px", marginBottom: "20px" }}
+          style={{ marginTop: "20px", marginBottom: "20px" }}
         >
           {title} <span style={{ color: "grey" }}>({sortedGroup.length})</span>
         </HeadingText>

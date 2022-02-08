@@ -1,6 +1,5 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { VictoryPie, VictoryAnimation, VictoryLabel } from "victory";
 import {
   Card,
   CardBody,
@@ -9,73 +8,42 @@ import {
   Spinner,
   AutoSizer,
   PlatformStateContext,
-  CardHeader,
   Grid,
   GridItem,
   Stack,
   StackItem,
   CardSection,
-  Layout,
-  LayoutItem,
-  BlockText,
-  Link,
-  Badge,
+  SectionMessage,
 } from "nr1";
-import NrqlQueryError from "../../src/nrql-query-error";
+import ErrorState from "../../src/error-state";
 import NoDataState from "../../src/no-data-state";
-import { baseLabelStyles } from "../../src/theme";
-import { ATTRIBUTES, mainThresholds } from "../../utils/attributes";
-import {
-  arithmeticMean,
-  getSymbol,
-  parseScoreFromNrqlResult,
-  getMainColor,
-} from "../../utils/helpers";
-import { SCORE_QUERIES } from "../../utils/constants";
+import DescriptionBlock from "../../src/components/DescriptionBlock";
+import ScoreGuide from "../../src/components/ScoreGuide";
+
+import { ATTRIBUTES } from "../../utils/attributes";
+import { parseScoreFromNrqlResult, getMainColor } from "../../utils/helpers";
 import { QUANTILE_AT_VALUE } from "../../utils/math.js";
 import ScoreVisualization from "../../src/components/ScoreVisualization";
-const BOUNDS = {
-  X: 300,
-  Y: 300,
-};
-
-const LABEL_SIZE = 20;
-const LABEL_PADDING = 10;
-const CHART_WIDTH = BOUNDS.X + LABEL_PADDING * 2;
-const CHART_HEIGHT = BOUNDS.Y + LABEL_SIZE;
+import LighthouseHeader from "../../src/components/LighthouseHeader";
 
 export default class CircularProgressBar extends React.Component {
-  // Custom props you wish to be configurable in the UI must also be defined in
-  // the nr1.json file for the visualization. See docs for more details.
   static propTypes = {
-    showDescriptions: PropTypes.Boolean,
-    showCategoryScores: PropTypes.Boolean,
-    showCategoryScores: PropTypes.Boolean,
-    showCoreScores: PropTypes.Boolean,
+    uiSettings: PropTypes.shape({
+      hideCategoryScores: PropTypes.Boolean,
+      hideDescriptions: PropTypes.Boolean,
+      hideCoreScores: PropTypes.Boolean,
+      hideScoreGuide: PropTypes.Boolean,
+    }),
 
-    showScoreGuide: PropTypes.Boolean,
-    showOverallScore: PropTypes.Boolean,
     /**
      * An array of objects consisting of a nrql `query` and `accountId`.
      * This should be a standard prop for any NRQL based visualizations.
      */
-    nrqlQueries: PropTypes.arrayOf(
-      PropTypes.shape({
-        accountId: PropTypes.number,
-        query: PropTypes.string,
-        timeframe: PropTypes.string,
-        requestedUrl: PropTypes.string,
-        strategy: PropTypes.string,
-      })
-    ),
-
-    /**
-     * Configuration that determines what values to display as critical or
-     * successful.
-     */
-    thresholds: PropTypes.shape({
-      criticalThreshold: PropTypes.number,
-      highValuesAreSuccess: PropTypes.bool,
+    nrqlSettings: PropTypes.shape({
+      accountId: PropTypes.number,
+      timeframe: PropTypes.string,
+      requestedUrl: PropTypes.string,
+      strategy: PropTypes.string,
     }),
   };
 
@@ -84,6 +52,7 @@ export default class CircularProgressBar extends React.Component {
       (metricScoring) => metricScoring.metadata.weight
     );
     const weightSum = weights.reduce((agg, val) => (agg += val));
+    console.log({ weightSum });
     console.assert(weightSum > 0.999 && weightSum < 1.0001); // lol rounding is hard.
   };
 
@@ -92,20 +61,21 @@ export default class CircularProgressBar extends React.Component {
   };
 
   formatData = (data) => {
+    console.log({ data });
     return Object.keys(ATTRIBUTES).map((att) => {
       const { name, explanation, weight, scores, metrics, link } =
         ATTRIBUTES[att];
       const filtered = data.find((point) =>
         Object.keys(point.data[0]).some((key) => key.includes(att))
       );
-      // console.log({ filtered });
+      console.log({ filtered });
       const usedKey = Object.keys(filtered.data[0]).find((key) =>
         key.includes(att)
       );
-      // console.log({ usedKey });
+      console.log({ usedKey });
       const result = filtered.data[0][usedKey];
       const score = this.calculateScore(metrics, result);
-      // console.log({ score, result });
+      console.log({ score, result });
       // console.log(score);
       return {
         metadata: {
@@ -120,37 +90,6 @@ export default class CircularProgressBar extends React.Component {
         data: { result, score }, // Current value.
       };
     });
-  };
-  calculateTotalScore = (data) => {
-    const percent = arithmeticMean(data);
-    console.log(percent);
-    const color = getMainColor(percent);
-    console.log({
-      percent,
-      label: "Lighthouse Score",
-      series: [
-        { x: "progress", y: percent, color },
-        { x: "remainder", y: 100 - percent, color: "transparent" },
-      ],
-    });
-    return {
-      percent,
-      color,
-      label: "Lighthouse Score",
-      series: [
-        { x: "progress", y: percent, color },
-        { x: "remainder", y: 100 - percent, color: "transparent" },
-      ],
-    };
-  };
-
-  nrqlInputIsValid = (data) => {
-    // console.log(data);
-    const allowedAttributes = Object.keys(ATTRIBUTES)
-      .map((key) => JSON.stringify(data).includes(key))
-      .filter(Boolean);
-    // console.log({ allowedAttributes });
-    return allowedAttributes.length >= 6;
   };
 
   checkColor = (time, scores) => {
@@ -168,7 +107,7 @@ export default class CircularProgressBar extends React.Component {
     const color = this.checkColor(time, scores);
     const calculatedScore = () => {
       if (units == "s") {
-        return `${time / 1000} s`;
+        return `${Number(Math.round(time) + "e-" + 3)} s`;
       } else if (units == "ms") {
         return `${time} ms`;
       } else {
@@ -228,40 +167,76 @@ export default class CircularProgressBar extends React.Component {
   };
 
   render() {
+    const { nrqlSettings, uiSettings } = this.props;
+    // console.log({ nrqlSettings, uiSettings });
     const {
-      nrqlQueries,
+      hideDescriptions,
+      hideCoreScores,
+      hideScoreGuide,
+      hideCategoryScores,
+    } = uiSettings;
 
-      showDescriptions = true,
-      showCategoryScores = true,
-      showCoreScores = true,
-      showScoreGuide = true,
-      showOverallScore = true,
-    } = this.props;
+    const { requestedUrl, accountId } = nrqlSettings;
 
-    const nrqlQueryPropsAvailable =
-      nrqlQueries &&
-      nrqlQueries[0] &&
-      nrqlQueries[0].accountId &&
-      nrqlQueries[0].query;
-    if (!nrqlQueryPropsAvailable) {
-      return <EmptyState />;
+    const nrqlQueryPropsSet = requestedUrl && accountId;
+
+    if (!nrqlQueryPropsSet) {
+      return <NoDataState />;
     }
-    const {
-      timeframe = "4 hours",
-      requestedUrl,
-      strategy = "desktop",
-    } = nrqlQueries[0];
-    console.log({ timeframe, requestedUrl, strategy, nrqlQueries });
+    let { timeframe, strategy } = nrqlSettings;
+    timeframe = timeframe || "4 hours";
+    strategy = strategy || "desktop";
+    console.log({ timeframe, requestedUrl, strategy, nrqlSettings });
+    const coreValuesQuery = `FROM lighthousePerformance SELECT average(firstContentfulPaint), average(largestContentfulPaint), average(interactive), average(totalBlockingTime), average(cumulativeLayoutShift), average(speedIndex) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${
+      strategy || "desktop"
+    }' SINCE ${timeframe} ago`;
+
+    const scoreQueries = [
+      {
+        title: "Performance",
+        query: `FROM lighthousePerformance SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${
+          strategy || "desktop"
+        }' SINCE ${timeframe} ago`,
+      },
+      {
+        title: "Best practices",
+        query: `FROM lighthouseBestPractices SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${
+          strategy || "desktop"
+        }' SINCE ${timeframe} ago`,
+      },
+      {
+        title: "SEO",
+        query: `FROM lighthouseSeo SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${
+          strategy || "desktop"
+        }' SINCE ${timeframe} ago`,
+      },
+      {
+        title: "PWA",
+        query: `FROM lighthousePwa SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${
+          strategy || "desktop"
+        }' SINCE ${timeframe} ago`,
+      },
+      {
+        title: "Accessibility",
+        query: `FROM lighthouseAccessibility SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${
+          strategy || "desktop"
+        }' SINCE ${timeframe} ago`,
+      },
+    ];
+
+    const metadataQuery = `FROM lighthousePerformance SELECT * WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${
+      strategy || "desktop"
+    }' SINCE ${timeframe} ago LIMIT 1`;
+
     return (
       <AutoSizer>
         {({ width, height }) => (
           <PlatformStateContext.Consumer>
             {({ timeRange }) => (
               <NrqlQuery
-                query={nrqlQueries[0].query}
-                accountId={parseInt(nrqlQueries[0].accountId)}
+                query={coreValuesQuery}
+                accountId={accountId}
                 pollInterval={NrqlQuery.AUTO_POLL_INTERVAL}
-                timeRange={timeRange}
               >
                 {({ data, loading, error }) => {
                   if (loading) {
@@ -269,186 +244,159 @@ export default class CircularProgressBar extends React.Component {
                   }
 
                   if (error && data === null) {
-                    return (
-                      <NrqlQueryError
-                        title="NRQL Syntax Error"
-                        description={error.message}
-                      />
-                    );
+                    return <ErrorState error={error} />;
                   }
 
                   if (!data.length) {
                     return <NoDataState />;
                   }
-                  // console.log({ data });
-                  if (!this.nrqlInputIsValid(data)) {
-                    return (
-                      <NrqlQueryError
-                        title="Unsupported NRQL query"
-                        description="The provided NRQL query is not supported by this visualization. Please make sure to have the following attributes: 
-                        firstContentfulPaint,
-                        largestContentfulPaint,
-                        interactive,
-                        totalBlockingTime,
-                        cumulativeLayoutShift,
-                        speedIndex"
-                      />
-                    );
-                  }
-                  // const { requestedUrl } = data[0].data[0];
 
-                  // console.log(data[0]);
                   const filteredAttributes = this.formatData(data);
-                  const performanceScore = parseScoreFromNrqlResult(data);
-                  // console.log({ performanceScore });
-
-                  // return <div>Hello</div>;
                   this.checkWeights(filteredAttributes);
-                  // console.log(filteredAttributes);
-                  const performanceColor = getMainColor(performanceScore);
-                  // console.log({ performanceColor });
-                  const performanceSeries = [
-                    {
-                      x: "progress",
-                      y: performanceScore,
-                      color: performanceColor,
-                    },
-                    {
-                      x: "remainder",
-                      y: 100 - performanceScore,
-                      color: "transparent",
-                    },
-                  ];
-                  let TEST_QUERIES;
-                  if (requestedUrl) {
-                    TEST_QUERIES = [
-                      {
-                        title: "Performance",
-                        query: `FROM lighthousePerformance SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${strategy || 'desktop'}' SINCE ${timeframe} ago`,
-                      },
-                      {
-                        title: "Best practices",
-                        query: `FROM lighthouseBestPractices SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${strategy || 'desktop'}' SINCE ${timeframe} ago`,
-                      },
-                      {
-                        title: "SEO",
-                        query: `FROM lighthouseSeo SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${strategy || 'desktop'}' SINCE ${timeframe} ago`,
-                      },
-                      {
-                        title: "PWA",
-                        query: `FROM lighthousePwa SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${strategy || 'desktop'}' SINCE ${timeframe} ago`,
-                      },
-                      {
-                        title: "Accessibility",
-                        query: `FROM lighthouseAccessibility SELECT average(score) WHERE requestedUrl = '${requestedUrl}' AND deviceType = '${strategy || 'desktop'}' SINCE ${timeframe} ago`,
-                      },
-                    ];
-                  }
-                  // const { percent, color, label, series } =
-                  //   this.calculateTotalScore(filteredAttributes);
-                  // console.log(height);
+
                   return (
                     <>
-                      {/* {requestedUrl} */}
-                      {TEST_QUERIES && TEST_QUERIES.map(({ title, query }) => (
-                            <div style={{ width: "250px" }}>
-                              <NrqlQuery
-                                query={query}
-                                accountId={parseInt(nrqlQueries[0].accountId)}
-                                pollInterval={NrqlQuery.AUTO_POLL_INTERVAL}
-                                timeRange={timeRange}
-                              >
-                                {({ data, loading, error }) => {
-                                  if (loading) {
-                                    return <Spinner />;
-                                  }
-                                  console.log({query})
-                                  if (error && data === null) {
-                                    return (
-                                      <NrqlQueryError
-                                        title="NRQL Syntax Error"
-                                        description={error.message}
-                                      />
-                                    );
-                                  }
+                      <Card>
+                        <CardBody>
+                          <LighthouseHeader
+                            title="Lighthouse Scores"
+                            strategy={strategy}
+                            requestedUrl={requestedUrl}
+                            query={metadataQuery}
+                            accountId={accountId}
+                          />
 
-                                  if (!data.length) {
-                                    return <NoDataState />;
-                                  }
-                                  console.log({data})
-                                  const categoryScore = parseScoreFromNrqlResult(data);
-                                  console.log({categoryScore})
-                                  // return (<div>Hello</div>)
-                                  // const resultData = data[0].data[0];
-                                  // const { title } = resultData;
-                                  // let score = resultData.score * 100;
-                                  // console.log({ score });
-                                  const color = getMainColor(categoryScore);
-                                  console.log({ color });
-                                  const series = [
-                                    { x: "progress", y: categoryScore, color },
-                                    {
-                                      x: "remainder",
-                                      y: 100 - categoryScore,
-                                      color: "transparent",
-                                    },
-                                  ];
-                                  return (
-                                    <Stack
-                                      directionType={
-                                        Stack.DIRECTION_TYPE.VERTICAL
-                                      }
-                                      style={{
-                                        textAlign: "center",
-                                        width: "100%",
-                                        alignItems: "center",
-                                        paddingTop: "15px",
-                                      }}
-                                    >
-                                      <StackItem style={{ width: "200px" }}>
-                                        <ScoreVisualization
-                                          score={categoryScore}
-                                          color={color}
-                                          series={series}
-                                        />
-                                      </StackItem>
-                                      <StackItem>
-                                        <HeadingText
-                                          type={HeadingText.TYPE.HEADING_1}
-                                          spacingType={[
-                                            HeadingText.SPACING_TYPE.MEDIUM,
-                                          ]}
-                                        >
-                                          {title} Score
-                                        </HeadingText>
-                                      </StackItem>
-                                    </Stack>
-                                  );
+                          <CardSection />
+
+                          {!hideCategoryScores && (
+                            <>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  justifyContent: "center",
                                 }}
-                              </NrqlQuery>
-                            </div>
-                          ))}
-                      <Grid>
-                        {showCoreScores && (
-                          <GridItem
-                            columnSpan={9}
-                            style={{ paddingLeft: "20px" }}
-                          >
-                            <Grid>
-                              {filteredAttributes.map((att) => {
-                                return (
-                                  <GridItem
-                                    columnSpan={4}
-                                    style={{
-                                      marginBottom:
-                                        !showDescriptions && showOverallScore
-                                          ? "80px"
-                                          : "0px",
-                                    }}
-                                  >
-                                    <Card>
-                                      <CardBody>
-                                        <CardSection>
+                              >
+                                {scoreQueries.map(({ title, query }) => (
+                                  <div style={{ width: "200px" }}>
+                                    <NrqlQuery
+                                      query={query}
+                                      accountId={parseInt(accountId)}
+                                      pollInterval={
+                                        NrqlQuery.AUTO_POLL_INTERVAL
+                                      }
+                                      timeRange={timeRange}
+                                    >
+                                      {({ data, loading, error }) => {
+                                        if (loading) {
+                                          return <Spinner />;
+                                        }
+                                        console.log({ query });
+                                        if (error && data === null) {
+                                          return <ErrorState error={error} />;
+                                        }
+
+                                        if (!data.length) {
+                                          return <NoDataState />;
+                                        }
+                                        // console.log({ data });
+                                        const categoryScore =
+                                          parseScoreFromNrqlResult(data);
+                                        const color =
+                                          getMainColor(categoryScore);
+                                        // console.log({ color });
+                                        const series = [
+                                          {
+                                            x: "progress",
+                                            y: categoryScore,
+                                            color,
+                                          },
+                                          {
+                                            x: "remainder",
+                                            y: 100 - categoryScore,
+                                            color: "transparent",
+                                          },
+                                        ];
+                                        return (
+                                          <Stack
+                                            directionType={
+                                              Stack.DIRECTION_TYPE.VERTICAL
+                                            }
+                                            style={{
+                                              textAlign: "center",
+                                              width: "100%",
+                                              alignItems: "center",
+                                              paddingTop: "15px",
+                                            }}
+                                          >
+                                            <StackItem
+                                              style={{ width: "150px" }}
+                                            >
+                                              <ScoreVisualization
+                                                score={categoryScore}
+                                                color={color}
+                                                series={series}
+                                              />
+                                            </StackItem>
+                                            <StackItem>
+                                              <HeadingText
+                                                type={
+                                                  HeadingText.TYPE.HEADING_4
+                                                }
+                                                spacingType={[
+                                                  HeadingText.SPACING_TYPE
+                                                    .MEDIUM,
+                                                ]}
+                                              >
+                                                {title} Score
+                                              </HeadingText>
+                                            </StackItem>
+                                          </Stack>
+                                        );
+                                      }}
+                                    </NrqlQuery>
+                                  </div>
+                                ))}
+                              </div>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  justifyContent: "center",
+                                  padding: "20px",
+                                }}
+                              >
+                                <Stack>
+                                  <StackItem>
+                                    <SectionMessage
+                                      type={SectionMessage.TYPE.CRITICAL}
+                                      title="0 - 49"
+                                    />
+                                  </StackItem>
+                                  <StackItem>
+                                    <SectionMessage
+                                      type={SectionMessage.TYPE.WARNING}
+                                      title="50 - 89"
+                                    />
+                                  </StackItem>
+                                  <StackItem>
+                                    <SectionMessage
+                                      type={SectionMessage.TYPE.SUCCESS}
+                                      title="90 - 100"
+                                    />
+                                  </StackItem>
+                                </Stack>
+                              </div>
+                            </>
+                          )}
+                          <Grid>
+                            {!hideCoreScores && (
+                              <>
+                                {filteredAttributes.map((att) => {
+                                  return (
+                                    <GridItem columnSpan={4}>
+                                      <Card>
+                                        <CardBody>
                                           <Stack
                                             verticalType={
                                               Stack.VERTICAL_TYPE.CENTER
@@ -466,13 +414,14 @@ export default class CircularProgressBar extends React.Component {
                                                 width: "250px",
                                               }}
                                             >
-                                              <h3
+                                              <HeadingText
                                                 style={{
                                                   fontWeight: 500,
+                                                  overflowWrap: "break-word",
                                                 }}
                                               >
                                                 {att.metadata.name}
-                                              </h3>
+                                              </HeadingText>
                                             </StackItem>
                                           </Stack>
                                           <HeadingText
@@ -486,205 +435,39 @@ export default class CircularProgressBar extends React.Component {
                                               att.metadata.id
                                             )}
                                           </HeadingText>
-                                        </CardSection>
-                                        <CardSection>
-                                          {showScoreGuide && (
-                                            <Grid
-                                              spacingType={[
-                                                Grid.SPACING_TYPE.EXTRA_LARGE,
-                                                Grid.SPACING_TYPE.NONE,
-                                                Grid.SPACING_TYPE.NONE,
-                                              ]}
-                                              gapType={Grid.GAP_TYPE.SMALL}
-                                            >
-                                              <GridItem
-                                                columnSpan={3}
-                                                style={{ color: "green" }}
-                                              >
-                                                Good
-                                              </GridItem>
-                                              <GridItem
-                                                columnSpan={3}
-                                                style={{ color: "orange" }}
-                                              >
-                                                Moderate
-                                              </GridItem>
-                                              <GridItem
-                                                columnSpan={3}
-                                                style={{ color: "red" }}
-                                              >
-                                                Slow
-                                              </GridItem>
-                                              <GridItem columnSpan={3}>
-                                                Weight
-                                              </GridItem>
-                                              <GridItem
-                                                columnSpan={3}
-                                                style={{ color: "green" }}
-                                              >
-                                                {`0 - ${att.metadata.scores.fast}`}
-                                              </GridItem>
-                                              <GridItem
-                                                columnSpan={3}
-                                                style={{ color: "orange" }}
-                                              >
-                                                {`${att.metadata.scores.fast} - ${att.metadata.scores.mid}`}
-                                              </GridItem>
-                                              <GridItem
-                                                columnSpan={3}
-                                                style={{ color: "red" }}
-                                              >
-                                                {`> ${att.metadata.scores.mid}`}
-                                              </GridItem>
-                                              <GridItem columnSpan={3}>
-                                                {`${
-                                                  att.metadata.metrics.weight *
-                                                  100
-                                                }%`}
-                                              </GridItem>
-                                            </Grid>
+
+                                          <CardSection />
+                                          {!hideScoreGuide && (
+                                            <>
+                                              <ScoreGuide
+                                                fast={att.metadata.scores.fast}
+                                                mid={att.metadata.scores.mid}
+                                                weight={
+                                                  att.metadata.metrics.weight
+                                                }
+                                              />
+
+                                              <CardSection />
+                                            </>
                                           )}
-                                        </CardSection>
-                                        {showDescriptions && (
-                                          <CardSection>
-                                            <Grid
-                                              spacingType={[
-                                                Grid.SPACING_TYPE.EXTRA_LARGE,
-                                                Grid.SPACING_TYPE.NONE,
-                                                Grid.SPACING_TYPE.NONE,
-                                              ]}
-                                              gapType={Grid.GAP_TYPE.SMALL}
-                                            >
-                                              <GridItem columnSpan={12}>
-                                                <BlockText>
-                                                  {att.metadata.explanation}
-                                                </BlockText>
-                                              </GridItem>
-                                              <GridItem columnSpan={12}>
-                                                <Link to={att.metadata.link}>
-                                                  Read more
-                                                </Link>
-                                              </GridItem>
-                                            </Grid>
-                                          </CardSection>
-                                        )}
-                                      </CardBody>
-                                    </Card>
-                                  </GridItem>
-                                );
-                              })}
-                            </Grid>
-                          </GridItem>
-                        )}
-                      </Grid>
-                      {showCategoryScores && (
-                        <div style={{ display: "flex", flexWrap: "wrap" }}>
-                          <div style={{ width: "250px" }}>
-                            <Stack
-                              directionType={Stack.DIRECTION_TYPE.VERTICAL}
-                              style={{
-                                textAlign: "center",
-                                width: "100%",
-                                alignItems: "center",
-                                paddingTop: "15px",
-                              }}
-                            >
-                              <StackItem style={{ width: "200px" }}>
-                                <ScoreVisualization
-                                  score={performanceScore}
-                                  color={performanceColor}
-                                  series={performanceSeries}
-                                />
-                              </StackItem>
-                              <StackItem>
-                                <HeadingText
-                                  type={HeadingText.TYPE.HEADING_1}
-                                  spacingType={[
-                                    HeadingText.SPACING_TYPE.MEDIUM,
-                                  ]}
-                                >
-                                  Performance Score
-                                </HeadingText>
-                              </StackItem>
-                            </Stack>
-                          </div>
-                          {SCORE_QUERIES.map(({ title, query }) => (
-                            <div style={{ width: "250px" }}>
-                              <NrqlQuery
-                                query={query}
-                                accountId={parseInt(nrqlQueries[0].accountId)}
-                                pollInterval={NrqlQuery.AUTO_POLL_INTERVAL}
-                                timeRange={timeRange}
-                              >
-                                {({ data, loading, error }) => {
-                                  if (loading) {
-                                    return <Spinner />;
-                                  }
-
-                                  if (error && data === null) {
-                                    return (
-                                      <NrqlQueryError
-                                        title="NRQL Syntax Error"
-                                        description={error.message}
-                                      />
-                                    );
-                                  }
-
-                                  if (!data.length) {
-                                    return <NoDataState />;
-                                  }
-
-                                  const resultData = data[0].data[0];
-                                  const { title } = resultData;
-                                  let score = resultData.score * 100;
-                                  console.log({ score });
-                                  const color = getMainColor(score);
-                                  console.log({ color });
-                                  const series = [
-                                    { x: "progress", y: score, color },
-                                    {
-                                      x: "remainder",
-                                      y: 100 - score,
-                                      color: "transparent",
-                                    },
-                                  ];
-                                  return (
-                                    <Stack
-                                      directionType={
-                                        Stack.DIRECTION_TYPE.VERTICAL
-                                      }
-                                      style={{
-                                        textAlign: "center",
-                                        width: "100%",
-                                        alignItems: "center",
-                                        paddingTop: "15px",
-                                      }}
-                                    >
-                                      <StackItem style={{ width: "200px" }}>
-                                        <ScoreVisualization
-                                          score={score}
-                                          color={color}
-                                          series={series}
-                                        />
-                                      </StackItem>
-                                      <StackItem>
-                                        <HeadingText
-                                          type={HeadingText.TYPE.HEADING_1}
-                                          spacingType={[
-                                            HeadingText.SPACING_TYPE.MEDIUM,
-                                          ]}
-                                        >
-                                          {title} Score
-                                        </HeadingText>
-                                      </StackItem>
-                                    </Stack>
+                                          {!hideDescriptions && (
+                                            <DescriptionBlock
+                                              link={att.metadata.link}
+                                              explanation={
+                                                att.metadata.explanation
+                                              }
+                                            />
+                                          )}
+                                        </CardBody>
+                                      </Card>
+                                    </GridItem>
                                   );
-                                }}
-                              </NrqlQuery>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                                })}
+                              </>
+                            )}
+                          </Grid>
+                        </CardBody>
+                      </Card>
                     </>
                   );
                 }}
@@ -696,29 +479,3 @@ export default class CircularProgressBar extends React.Component {
     );
   }
 }
-
-const EmptyState = () => (
-  <Card className="EmptyState">
-    <CardBody className="EmptyState-cardBody">
-      <HeadingText
-        spacingType={[HeadingText.SPACING_TYPE.LARGE]}
-        type={HeadingText.TYPE.HEADING_3}
-      >
-        Please provide a NRQL query & account ID pair
-      </HeadingText>
-      <HeadingText
-        spacingType={[HeadingText.SPACING_TYPE.MEDIUM]}
-        type={HeadingText.TYPE.HEADING_4}
-      >
-        This Visualization supports NRQL queries with a single SELECT clause
-        returning the necessary attributes from PageSpeed Insights Synthetics
-        Monitor. For example:
-      </HeadingText>
-      <code>
-        {
-          "FROM lighthouseScores SELECT firstContentfulPaint, largestContentfulPaint, interactive, totalBlockingTime, cumulativeLayoutShift, speedIndex WHERE requestedUrl = 'https://developer.newrelic.com' SINCE 30 MINUTES AGO LIMIT 1"
-        }
-      </code>
-    </CardBody>
-  </Card>
-);
