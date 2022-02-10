@@ -1,7 +1,7 @@
 {
     "schemaType": "VISUALIZATION",
     "id": "lighthouse-scores",
-    "displayName": "Lighthouse scores",
+    "displayName": "Lighthouse Scores",
     "description": "",
     "configuration": [
         {

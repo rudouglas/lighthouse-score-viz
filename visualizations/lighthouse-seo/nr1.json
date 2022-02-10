@@ -1,7 +1,7 @@
 {
     "schemaType": "VISUALIZATION",
     "id": "lighthouse-seo-audits",
-    "displayName": "Lighthouse SEO audits",
+    "displayName": "Lighthouse SEO Audits",
     "description": "",
     "configuration": [
         {

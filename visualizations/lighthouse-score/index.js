@@ -92,24 +92,33 @@ export default class CircularProgressBar extends React.Component {
     });
   };
 
-  checkColor = (time, scores) => {
+  checkColor = (time, scores, attribute) => {
     let color = "red";
-    if (time / 1000 <= scores.fast) {
-      color = "green";
-    } else if (time / 1000 <= scores.mid) {
-      color = "orange";
+    if (attribute && attribute === 'cumulativeLayoutShift') {
+      if (time <= scores.fast) {
+        color = "green";
+      } else if (time <= scores.mid) {
+        color = "orange";
+      }
+    } else {
+      if (time / 1000 <= scores.fast) {
+        color = "green";
+      } else if (time / 1000 <= scores.mid) {
+        color = "orange";
+      }
     }
+    
     return color;
   };
 
   checkTime = (time, attribute) => {
     const { scores, units } = ATTRIBUTES[attribute];
-    const color = this.checkColor(time, scores);
+    const color = this.checkColor(time, scores, attribute);
     const calculatedScore = () => {
       if (units == "s") {
         return `${Number(Math.round(time) + "e-" + 3)} s`;
       } else if (units == "ms") {
-        return `${time} ms`;
+        return `${Number(Math.round(time))} ms`;
       } else {
         return `${Number(Math.round(time + "e" + 4) + "e-" + 4)}`;
       }
