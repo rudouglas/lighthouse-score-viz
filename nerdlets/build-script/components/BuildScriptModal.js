@@ -3,27 +3,13 @@ import {
   Card,
   CardBody,
   HeadingText,
-  NrqlQuery,
   Spinner,
-  AutoSizer,
-  PlatformStateContext,
-  CardHeader,
   Grid,
   GridItem,
-  platform,
   Link,
   navigation,
-  Stack,
-  StackItem,
-  Steps,
-  StepsItem,
-  LayoutItem,
   BlockText,
-  Radio,
-  RadioGroup,
-  Badge,
   Button,
-  Modal,
   Select,
   SelectItem,
   CheckboxGroup,
@@ -38,8 +24,6 @@ import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-clike";
 import "prismjs/components/prism-javascript";
-import CodeEditor from "@uiw/react-textarea-code-editor";
-
 export default class BuildScriptModal extends React.Component {
   constructor() {
     super(...arguments);

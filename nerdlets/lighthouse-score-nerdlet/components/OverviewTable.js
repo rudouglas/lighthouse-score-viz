@@ -11,6 +11,8 @@ import {
   Icon,
   Spinner,
   Tooltip,
+  Link,
+  navigation,
 } from "nr1";
 import { getMainColor } from "../../../utils/helpers";
 import TableEmptyState from "./TableEmptyState";
@@ -119,6 +121,66 @@ export default class OverviewTable extends React.Component {
     return items;
   };
 
+  _openAccessibilityModal = (requestedUrl, strategy) => {
+    const { accountId } = this.props;
+    navigation.openStackedNerdlet({
+      id: "accessibility-modal",
+      urlState: {
+        accountId,
+        requestedUrl,
+        strategy,
+      },
+    });
+  };
+
+  _openPerformanceModal = (requestedUrl, strategy) => {
+    const { accountId } = this.props;
+    navigation.openStackedNerdlet({
+      id: "performance-modal",
+      urlState: {
+        accountId,
+        requestedUrl,
+        strategy,
+      },
+    });
+  };
+
+  _openBestPracticesModal = (requestedUrl, strategy) => {
+    const { accountId } = this.props;
+    navigation.openStackedNerdlet({
+      id: "best-practices-modal",
+      urlState: {
+        accountId,
+        requestedUrl,
+        strategy,
+      },
+    });
+  };
+
+  _openSeoModal = (requestedUrl, strategy) => {
+    const { accountId } = this.props;
+    navigation.openStackedNerdlet({
+      id: "seo-modal",
+      urlState: {
+        accountId,
+        requestedUrl,
+        strategy,
+      },
+    });
+  };
+
+  _openPwaModal = (requestedUrl, strategy) => {
+    const { accountId } = this.props;
+    navigation.openStackedNerdlet({
+      id: "pwa-modal",
+      urlState: {
+        accountId,
+        requestedUrl,
+        strategy,
+      },
+    });
+  };
+
   render() {
     const { items, nrqlError } = this.state;
 
@@ -187,6 +249,9 @@ export default class OverviewTable extends React.Component {
                   ),
                   color: "white",
                 }}
+                onClick={() =>
+                  this._openPerformanceModal(item.requestedUrl, item.strategy)
+                }
               >
                 {Math.round(item.lighthousePerformanceScore * 100)}
               </TableRowCell>
@@ -197,6 +262,9 @@ export default class OverviewTable extends React.Component {
                   ),
                   color: "white",
                 }}
+                onClick={() =>
+                  this._openAccessibilityModal(item.requestedUrl, item.strategy)
+                }
               >
                 {Math.round(item.lighthouseAccessibilityScore * 100)}
               </TableRowCell>
@@ -207,6 +275,9 @@ export default class OverviewTable extends React.Component {
                   ),
                   color: "white",
                 }}
+                onClick={() =>
+                  this._openBestPracticesModal(item.requestedUrl, item.strategy)
+                }
               >
                 {Math.round(item.lighthouseBestPracticesScore * 100)}
               </TableRowCell>
@@ -215,6 +286,9 @@ export default class OverviewTable extends React.Component {
                   backgroundColor: getMainColor(item.lighthouseSeoScore * 100),
                   color: "white",
                 }}
+                onClick={() =>
+                  this._openSeoModal(item.requestedUrl, item.strategy)
+                }
               >
                 {Math.round(item.lighthouseSeoScore * 100)}
               </TableRowCell>
@@ -223,6 +297,9 @@ export default class OverviewTable extends React.Component {
                   backgroundColor: getMainColor(item.lighthousePwaScore * 100),
                   color: "white",
                 }}
+                onClick={() =>
+                  this._openPwaModal(item.requestedUrl, item.strategy)
+                }
               >
                 {Math.round(item.lighthousePwaScore * 100)}
               </TableRowCell>
